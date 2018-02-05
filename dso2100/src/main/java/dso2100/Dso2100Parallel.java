@@ -2,7 +2,6 @@ package dso2100;
 
 import dso.DsoPortId;
 import jnpout32.VirtualIOPort;
-import jnpout32.ioPort;
 
 import javax.swing.*;
 import java.util.ArrayList;

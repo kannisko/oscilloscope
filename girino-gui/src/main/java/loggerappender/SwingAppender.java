@@ -1,12 +1,8 @@
 package loggerappender;
 
 import ch.qos.logback.classic.PatternLayout;
-import ch.qos.logback.classic.pattern.SyslogStartConverter;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
-import ch.qos.logback.core.encoder.Encoder;
 
 /**
  * Created by Pawel.Piotrowski on 2015-12-23.

@@ -2,7 +2,6 @@ package dso;
 
 import javax.swing.*;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Created by Pawel.Piotrowski on 2015-11-27.

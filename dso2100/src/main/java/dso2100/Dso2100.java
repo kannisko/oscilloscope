@@ -1,13 +1,10 @@
 package dso2100;
 
 import dso.IDso;
-
-import java.io.IOException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.io.IOException;
 
 /**
  * Created by Pawel.Piotrowski on 2015-11-27.
