@@ -2,10 +2,13 @@ package org.hihan.girinoscope.ui;
 
 import dso.DsoPortId;
 import dso.IDso;
+import dso2100.Dso2100Parallel;
+import org.hihan.girinoscope.Native;
+import org.hihan.girinoscope.ui.images.Icon;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
+import javax.swing.*;
+import javax.swing.UIManager.LookAndFeelInfo;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -13,37 +16,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import javax.swing.AbstractAction;
-import javax.swing.AbstractButton;
-import javax.swing.Action;
-import javax.swing.ButtonGroup;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.WindowConstants;
-
-import dso2100.Dso2100Parallel;
-import org.hihan.girinoscope.Native;
-import org.hihan.girinoscope.ui.images.Icon;
 
 @SuppressWarnings("serial")
 public class UI_old extends JFrame {
@@ -152,7 +129,7 @@ public class UI_old extends JFrame {
                             acquisition = executor.submit(new Callable<byte[]>() {
 
                                 public byte[] call() throws Exception {
-                                    return dso.acquireData();
+                                    return dso.acquireData().data;
                                 }
                             });
                         }
@@ -177,8 +154,6 @@ public class UI_old extends JFrame {
 
         @Override
         protected void process(List<byte[]> buffer) {
-            logger.log(Level.FINE, "{0} data buffer(s) to display.", buffer.size());
-            graphPane.setData(buffer.get(buffer.size() - 1));
         }
 
         @Override

@@ -1,43 +1,29 @@
 package org.hihan.girinoscope.ui;
 
-import dso.IDsoGuiListener;
-import dso.dummy.VirtualOscilloscope;
 import dso.IDso;
+import dso.IDsoGuiListener;
+import dso.virtual.VirtualOscilloscope;
 import gnu.io.CommPortIdentifier;
+import nati.Serial;
+import org.hihan.girinoscope.Native;
+import org.hihan.girinoscope.ui.images.Icon;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
+import javax.swing.*;
+import javax.swing.UIManager.LookAndFeelInfo;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import javax.swing.*;
-import javax.swing.UIManager.LookAndFeelInfo;
-
-import nati.Serial;
-import org.hihan.girinoscope.Native;
-import org.hihan.girinoscope.ui.images.Icon;
 
 @SuppressWarnings("serial")
 public class UI extends JFrame implements IDsoGuiListener{
@@ -74,6 +60,7 @@ public class UI extends JFrame implements IDsoGuiListener{
     private GraphPane graphPane;
 
     private Axis.Builder yAxisBuilder = new Axis.Builder();
+    private static final int NHorizDivs = 5;
 
     private StatusBar statusBar;
 
@@ -89,12 +76,133 @@ public class UI extends JFrame implements IDsoGuiListener{
         graphPane.setYCoordinateSystem(yAxisBuilder.build());
     }
 
-    @Override
-    public void setXAxis(XAxisSensivity xAxisSensivity) {
+    private final Action exportLastFrameAction = new AbstractAction("Export last frame", Icon.get("document-save.png")) {
+        {
+            putValue(Action.SHORT_DESCRIPTION, "Export the last time frame to CSV.");
+        }
 
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            DateFormat format = new SimpleDateFormat("yyyy_MM_dd-HH_mm");
+            fileChooser.setSelectedFile(new File("frame-" + format.format(new Date()) + ".csv"));
+            if (fileChooser.showSaveDialog(UI.this) == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                byte[] data = graphPane.getData().data;
+                BufferedWriter writer = null;
+                try {
+                    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+                    for (int i = 0; i < data.length; ++i) {
+                        writer.write(String.format("%d;%d", i, data[i]));
+                        writer.newLine();
+                    }
+                } catch (IOException e) {
+                    setStatus("red", e.getMessage());
+                } finally {
+                    if (writer != null) {
+                        try {
+                            writer.close();
+                        } catch (IOException e) {
+                            setStatus("red", e.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+    };
+    private Axis.Builder xAxisBuilder = new Axis.Builder();
+
+    public UI() {
+        setTitle("Girinoscope");
+        setIconImage(Icon.getImage("icon.png"));
+
+        setLayout(new BorderLayout());
+
+//        graphPane = new GraphPane(parameters.get(Parameter.THRESHOLD), parameters.get(Parameter.WAIT_DURATION));
+        graphPane = new GraphPane(1, 100);
+
+        graphPane.setYCoordinateSystem(yAxisBuilder.build());
+        graphPane.setXCoordinateSystem(xAxisBuilder.build());
+
+        graphPane.setPreferredSize(new Dimension(800, 600));
+        add(graphPane, BorderLayout.CENTER);
+
+        setJMenuBar(createMenuBar());
+
+        add(createToolBar(), BorderLayout.NORTH);
+
+        statusBar = new StatusBar();
+        add(statusBar, BorderLayout.SOUTH);
+
+
+        add(getHardwarePanel(), BorderLayout.EAST);
+
+        stopAcquiringAction.setEnabled(false);
+        exportLastFrameAction.setEnabled(false);
+
+        if (portId != null) {
+            startAcquiringAction.setEnabled(true);
+        } else {
+            startAcquiringAction.setEnabled(false);
+            setStatus("red", "No USB to serial adaptation port detected.");
+        }
+        startAcquiringAction.setEnabled(true);
     }
 
-    private class DataAcquisitionTask extends SwingWorker<Void, byte[]> {
+    @Override
+    public void setXAxis(XAxisSensivity xAxisSensivity) {
+        int div = xAxisSensivity.getUnitValue();
+        int max = NHorizDivs * div;
+        xAxisBuilder.setStartValue(0).setEndValue(max).setIncrement(div);
+        xAxisBuilder.setFormat("###" + xAxisSensivity.getUnit());
+        graphPane.setXCoordinateSystem(xAxisBuilder.build());
+    }
+
+    private final Action stopAcquiringAction = new AbstractAction("Stop acquiring", Icon.get("media-playback-stop.png")) {
+        {
+            putValue(Action.SHORT_DESCRIPTION, "Stop acquiring data from Girino.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            currentDataAcquisitionTask.cancel(true);
+        }
+    };
+
+    private final Action startAcquiringAction = new AbstractAction("Start acquiring", Icon.get("media-record.png")) {
+        {
+            putValue(Action.SHORT_DESCRIPTION, "Start acquiring data from Girino.");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            synchronized (UI.this) {
+//                parameters.put(Parameter.THRESHOLD, graphPane.getThreshold());
+//                parameters.put(Parameter.WAIT_DURATION, graphPane.getWaitDuration());
+            }
+            currentDataAcquisitionTask = new DataAcquisitionTask();
+            currentDataAcquisitionTask.execute();
+        }
+    };
+
+    private final Action aboutAction = new AbstractAction("About Girinoscope", Icon.get("help-about.png")) {
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            new AboutDialog(UI.this).setVisible(true);
+        }
+    };
+
+    private final Action exitAction = new AbstractAction("Quit", Icon.get("application-exit.png")) {
+
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            dispose();
+        }
+    };
+
+    private class DataAcquisitionTask extends SwingWorker<Void, IDso.AquisitionFrame> {
 
         private CommPortIdentifier frozenPortId;
 
@@ -143,7 +251,7 @@ public class UI extends JFrame implements IDsoGuiListener{
 
         private void acquireData() throws Exception {
             setStatus("blue", "Acquiring data from %s...", "frozen");//frozenPortId.getName());
-            Future<byte[]> acquisition = null;
+            Future<IDso.AquisitionFrame> acquisition = null;
             boolean terminated;
             do {
                 boolean updateConnection = false;
@@ -160,15 +268,15 @@ public class UI extends JFrame implements IDsoGuiListener{
                 } else {
                     try {
                         if (acquisition == null) {
-                            acquisition = executor.submit(new Callable<byte[]>() {
+                            acquisition = executor.submit(new Callable<IDso.AquisitionFrame>() {
 
                                 @Override
-                                public byte[] call() throws Exception {
+                                public IDso.AquisitionFrame call() throws Exception {
                                     return girino.acquireData();
                                 }
                             });
                         }
-                        byte[] buffer = acquisition.get(1, TimeUnit.SECONDS);
+                        IDso.AquisitionFrame buffer = acquisition.get(1, TimeUnit.SECONDS);
                         if (buffer != null) {
                             publish(buffer);
                             acquisition = null;
@@ -188,7 +296,7 @@ public class UI extends JFrame implements IDsoGuiListener{
         }
 
         @Override
-        protected void process(List<byte[]> buffer) {
+        protected void process(List<IDso.AquisitionFrame> buffer) {
             logger.log(Level.FINE, "{0} data buffer(s) to display.", buffer.size());
             graphPane.setData(buffer.get(buffer.size() - 1));
         }
@@ -209,125 +317,6 @@ public class UI extends JFrame implements IDsoGuiListener{
                 setStatus("red", e.getMessage());
             }
         }
-    }
-
-    private final Action exportLastFrameAction = new AbstractAction("Export last frame", Icon.get("document-save.png")) {
-        {
-            putValue(Action.SHORT_DESCRIPTION, "Export the last time frame to CSV.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent event) {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-            DateFormat format = new SimpleDateFormat("yyyy_MM_dd-HH_mm");
-            fileChooser.setSelectedFile(new File("frame-" + format.format(new Date()) + ".csv"));
-            if (fileChooser.showSaveDialog(UI.this) == JFileChooser.APPROVE_OPTION) {
-                File file = fileChooser.getSelectedFile();
-                byte[] data = graphPane.getData();
-                BufferedWriter writer = null;
-                try {
-                    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
-                    for (int i = 0; i < data.length; ++i) {
-                        writer.write(String.format("%d;%d", i, data[i]));
-                        writer.newLine();
-                    }
-                } catch (IOException e) {
-                    setStatus("red", e.getMessage());
-                } finally {
-                    if (writer != null) {
-                        try {
-                            writer.close();
-                        } catch (IOException e) {
-                            setStatus("red", e.getMessage());
-                        }
-                    }
-                }
-            }
-        }
-    };
-
-    private final Action stopAcquiringAction = new AbstractAction("Stop acquiring", Icon.get("media-playback-stop.png")) {
-        {
-            putValue(Action.SHORT_DESCRIPTION, "Stop acquiring data from Girino.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent event) {
-            currentDataAcquisitionTask.cancel(true);
-        }
-    };
-
-    private final Action startAcquiringAction = new AbstractAction("Start acquiring", Icon.get("media-record.png")) {
-        {
-            putValue(Action.SHORT_DESCRIPTION, "Start acquiring data from Girino.");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent event) {
-            synchronized (UI.this) {
-//                parameters.put(Parameter.THRESHOLD, graphPane.getThreshold());
-//                parameters.put(Parameter.WAIT_DURATION, graphPane.getWaitDuration());
-            }
-            currentDataAcquisitionTask = new DataAcquisitionTask();
-            currentDataAcquisitionTask.execute();
-        }
-    };
-
-    private final Action aboutAction = new AbstractAction("About Girinoscope", Icon.get("help-about.png")) {
-
-        @Override
-        public void actionPerformed(ActionEvent event) {
-            new AboutDialog(UI.this).setVisible(true);
-        }
-    };
-
-    private final Action exitAction = new AbstractAction("Quit", Icon.get("application-exit.png")) {
-
-        @Override
-        public void actionPerformed(ActionEvent event) {
-            dispose();
-        }
-    };
-
-    public UI() {
-        setTitle("Girinoscope");
-        setIconImage(Icon.getImage("icon.png"));
-
-        setLayout(new BorderLayout());
-
-//        graphPane = new GraphPane(parameters.get(Parameter.THRESHOLD), parameters.get(Parameter.WAIT_DURATION));
-        graphPane = new GraphPane(1,100);
-
-        graphPane.setYCoordinateSystem(yAxisBuilder.build());
-        float timeframe = 0.005F;
-        String xFormat = timeframe > 0.005 ? "#,##0 ms" : "#,##0.0 ms";
-        Axis xAxis = new Axis(0, timeframe * 1000, xFormat);
-        graphPane.setXCoordinateSystem(xAxis);
-
-        graphPane.setPreferredSize(new Dimension(800, 600));
-        add(graphPane, BorderLayout.CENTER);
-
-        setJMenuBar(createMenuBar());
-
-        add(createToolBar(), BorderLayout.NORTH);
-
-        statusBar = new StatusBar();
-        add(statusBar, BorderLayout.SOUTH);
-
-
-        add(getHardwarePanel(),BorderLayout.EAST);
-
-        stopAcquiringAction.setEnabled(false);
-        exportLastFrameAction.setEnabled(false);
-
-        if (portId != null) {
-            startAcquiringAction.setEnabled(true);
-        } else {
-            startAcquiringAction.setEnabled(false);
-            setStatus("red", "No USB to serial adaptation port detected.");
-        }
-        startAcquiringAction.setEnabled(true);
     }
 
     JPanel getHardwarePanel(){

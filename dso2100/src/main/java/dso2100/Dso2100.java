@@ -122,7 +122,7 @@ public abstract class Dso2100 implements IDso {
         sendAndReceiveStatus(self.ch2_gain,0x01);
     }
 
-    public byte[] acquireData() throws Exception {
+    public AquisitionFrame acquireData() throws Exception {
 
 
 
@@ -150,7 +150,7 @@ public abstract class Dso2100 implements IDso {
 //        pos = makeHi(pos, 100, buffer);
 //        pos = makeLo(pos, 100, buffer);
 //        pos = makeHi(pos, 50, buffer);
-        return buffer;
+        return new AquisitionFrame();
     }
 
     private int makeLo(int begin, int period, byte buffer[]) {

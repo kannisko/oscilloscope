@@ -1,25 +1,14 @@
 package org.hihan.girinoscope.ui;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Insets;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.Stroke;
+import dso.IDso;
+import org.hihan.girinoscope.ui.Axis.GraphLabel;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import org.hihan.girinoscope.ui.Axis.GraphLabel;
 
 @SuppressWarnings("serial")
 public class GraphPane extends JPanel {
@@ -54,7 +43,7 @@ public class GraphPane extends JPanel {
 
     private Axis yAxis;
 
-    private byte[] data;
+	private IDso.AquisitionFrame data;
 
     private Rectangle graphArea;
 
@@ -154,13 +143,13 @@ public class GraphPane extends JPanel {
 	repaint();
     }
 
-    public void setData(byte[] data) {
+	public IDso.AquisitionFrame getData() {
+		return data;
+	}
+
+	public void setData(IDso.AquisitionFrame data) {
 	this.data = data;
 	repaint();
-    }
-
-    public byte[] getData() {
-	return data;
     }
 
     public int getThreshold() {
@@ -263,10 +252,13 @@ public class GraphPane extends JPanel {
 	g.setColor(DATA_COLOR);
 	Stroke defaultStroke = g.getStroke();
 	g.setStroke(dataStroke);
-	int u = U_MAX;
+
 	Point previousPoint = null;
-	for (byte b : data) {
-	    Point point = toGraphArea(u--, b & 0xFF);
+		int sampleIdx = 0;
+		double coeff = graphArea.width / (5 * data.samplingFrequency * data.xAxisSenivity.getMicrosecondsPerDiv() * 1E-6);
+		for (byte b : data.data) {
+			Point point = toGraphArea(sampleIdx, b & 0xFF);
+			point.x = (int) Math.round(graphArea.x + coeff * sampleIdx++);
 	    if (previousPoint != null) {
 		g.drawLine(previousPoint.x, previousPoint.y, point.x, point.y);
 	    }
