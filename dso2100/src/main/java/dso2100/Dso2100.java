@@ -1,5 +1,6 @@
 package dso2100;
 
+import dso.AquisitionFrame;
 import dso.IDso;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

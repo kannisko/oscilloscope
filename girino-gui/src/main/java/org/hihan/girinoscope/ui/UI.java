@@ -1,7 +1,6 @@
 package org.hihan.girinoscope.ui;
 
-import dso.IDso;
-import dso.IDsoGuiListener;
+import dso.*;
 import dso.virtual.VirtualOscilloscope;
 import gnu.io.CommPortIdentifier;
 import nati.Serial;
@@ -202,7 +201,7 @@ public class UI extends JFrame implements IDsoGuiListener{
         }
     };
 
-    private class DataAcquisitionTask extends SwingWorker<Void, IDso.AquisitionFrame> {
+    private class DataAcquisitionTask extends SwingWorker<Void, AquisitionFrame> {
 
         private CommPortIdentifier frozenPortId;
 
@@ -251,7 +250,7 @@ public class UI extends JFrame implements IDsoGuiListener{
 
         private void acquireData() throws Exception {
             setStatus("blue", "Acquiring data from %s...", "frozen");//frozenPortId.getName());
-            Future<IDso.AquisitionFrame> acquisition = null;
+            Future<AquisitionFrame> acquisition = null;
             boolean terminated;
             do {
                 boolean updateConnection = false;
@@ -268,15 +267,15 @@ public class UI extends JFrame implements IDsoGuiListener{
                 } else {
                     try {
                         if (acquisition == null) {
-                            acquisition = executor.submit(new Callable<IDso.AquisitionFrame>() {
+                            acquisition = executor.submit(new Callable<AquisitionFrame>() {
 
                                 @Override
-                                public IDso.AquisitionFrame call() throws Exception {
+                                public AquisitionFrame call() throws Exception {
                                     return girino.acquireData();
                                 }
                             });
                         }
-                        IDso.AquisitionFrame buffer = acquisition.get(1, TimeUnit.SECONDS);
+                        AquisitionFrame buffer = acquisition.get(1, TimeUnit.SECONDS);
                         if (buffer != null) {
                             publish(buffer);
                             acquisition = null;
@@ -296,7 +295,7 @@ public class UI extends JFrame implements IDsoGuiListener{
         }
 
         @Override
-        protected void process(List<IDso.AquisitionFrame> buffer) {
+        protected void process(List<AquisitionFrame> buffer) {
             logger.log(Level.FINE, "{0} data buffer(s) to display.", buffer.size());
             graphPane.setData(buffer.get(buffer.size() - 1));
         }

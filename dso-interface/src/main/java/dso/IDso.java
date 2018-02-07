@@ -11,12 +11,6 @@ public interface IDso {
 //    boolean setConnection(DsoPortId portId, Map parameters ) throws Exception;
     void disconnect() throws IOException;
 
-    public static class AquisitionFrame {
-        //horiz
-        public int samplingFrequency;
-        public IDsoGuiListener.XAxisSensivity xAxisSenivity;
 
-        public byte data[];
-    }
     JPanel getPanel();
 }

@@ -1,7 +1,6 @@
 package dso.virtual;
 
-import dso.IDso;
-import dso.IDsoGuiListener;
+import dso.*;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -86,19 +85,19 @@ public class VirtualOscilloscope implements IDso {
             }
         });
 
-        verticalSensChan1.setModel(new DefaultComboBoxModel(new Object[]{IDsoGuiListener.YAxisSensivity.S_1mV, IDsoGuiListener.YAxisSensivity.S_2mV, IDsoGuiListener.YAxisSensivity.S_5mV}));
+        verticalSensChan1.setModel(new DefaultComboBoxModel(new Object[]{YAxisSensivity.S_1mV, YAxisSensivity.S_2mV, YAxisSensivity.S_5mV}));
         verticalSensChan1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 Object o = verticalSensChan1.getSelectedItem();
-                guiListener.setYAxis((IDsoGuiListener.YAxisSensivity) o);
+                guiListener.setYAxis((YAxisSensivity) o);
             }
         });
 
-        horizSensChan1.setModel(new DefaultComboBoxModel(IDsoGuiListener.XAxisSensivity.values()));
+        horizSensChan1.setModel(new DefaultComboBoxModel(XAxisSensivity.values()));
         horizSensChan1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 Object o = horizSensChan1.getSelectedItem();
-                guiListener.setXAxis((IDsoGuiListener.XAxisSensivity) o);
+                guiListener.setXAxis((XAxisSensivity) o);
             }
         });
 
@@ -120,7 +119,7 @@ public class VirtualOscilloscope implements IDso {
         Thread.sleep(100);
         AquisitionFrame result = new AquisitionFrame();
         result.samplingFrequency = generatorFrequency * INNER_VALUE_TAB_LEN;
-        result.xAxisSenivity = (IDsoGuiListener.XAxisSensivity) horizSensChan1.getSelectedItem();
+        result.xAxisSenivity = (XAxisSensivity) horizSensChan1.getSelectedItem();
 
         result.data = new byte[2000];
 

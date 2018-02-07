@@ -1,5 +1,6 @@
 package org.hihan.girinoscope.ui;
 
+import dso.AquisitionFrame;
 import dso.IDso;
 import org.hihan.girinoscope.ui.Axis.GraphLabel;
 
@@ -43,7 +44,7 @@ public class GraphPane extends JPanel {
 
     private Axis yAxis;
 
-	private IDso.AquisitionFrame data;
+	private AquisitionFrame data;
 
     private Rectangle graphArea;
 
@@ -143,11 +144,11 @@ public class GraphPane extends JPanel {
 	repaint();
     }
 
-	public IDso.AquisitionFrame getData() {
+	public AquisitionFrame getData() {
 		return data;
 	}
 
-	public void setData(IDso.AquisitionFrame data) {
+	public void setData(AquisitionFrame data) {
 	this.data = data;
 	repaint();
     }
