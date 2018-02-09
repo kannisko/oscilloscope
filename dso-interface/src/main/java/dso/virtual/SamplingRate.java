@@ -4,13 +4,13 @@ package dso.virtual;
  * Created by Pawel.Piotrowski on 2018-02-08.
  */
 public enum SamplingRate {
-    sr1kS(     1_000,   1,"kS\\s"),
-    sr10kS(   10_000, 10,"kS\\s"),
-    sr100kS( 100_000,100,"kS\\s"),
-    sr1MS( 1_000_000,  1,"MS\\s"),
-    sr10MS(1000000),
-    sr100MS(100_000_000);
-    //sr50MS;
+    sr1kS(        1_000,   1,"kS\\s"),
+    sr10kS(      10_000, 10,"kS\\s"),
+    sr100kS(    100_000,100,"kS\\s"),
+    sr1MS(    1_000_000,  1,"MS\\s"),
+    sr10MS(  10_000_000, 10,"MS\\s"),
+    sr100MS(100_000_000,100,"MS\\s");
+
     private int samplingRate;
     private String unit;
     private int unitSamplingRate;

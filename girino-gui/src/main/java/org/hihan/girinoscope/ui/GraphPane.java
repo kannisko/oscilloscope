@@ -256,7 +256,7 @@ public class GraphPane extends JPanel {
 
 	Point previousPoint = null;
 		int sampleIdx = 0;
-		double coeff = graphArea.width / (5 * data.samplingFrequency * data.xAxisSenivity.getMicrosecondsPerDiv() * 1E-6);
+		double coeff = graphArea.width / (5.0 * data.samplingFrequency * data.xAxisSenivity.getMicrosecondsPerDiv() * 1E-6);
 		for (byte b : data.data) {
 			Point point = toGraphArea(sampleIdx, b & 0xFF);
 			point.x = (int) Math.round(graphArea.x + coeff * sampleIdx++);

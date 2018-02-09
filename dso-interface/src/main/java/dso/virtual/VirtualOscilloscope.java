@@ -33,6 +33,8 @@ public class VirtualOscilloscope implements IDso {
     private JSlider amplitudeSlider;
     private JSlider frequencySlider;
     private JComboBox horizSensChan1;
+    private JComboBox samplingRateCombo;
+    private SamplingRate samplingRate = SamplingRate.sr1kS;
     private Shape shape = Shape.SIN;
     private double[] sinTable;
     private double[] triangleTable;
@@ -101,6 +103,14 @@ public class VirtualOscilloscope implements IDso {
             }
         });
 
+        samplingRateCombo.setModel(new DefaultComboBoxModel(SamplingRate.values()));
+        samplingRateCombo.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                Object o = samplingRateCombo.getSelectedItem();
+                samplingRate = (SamplingRate)o;
+            }
+        });
+
     }
 
     private void createUIComponents() {
@@ -118,7 +128,7 @@ public class VirtualOscilloscope implements IDso {
     public AquisitionFrame acquireData() throws Exception {
         Thread.sleep(100);
         AquisitionFrame result = new AquisitionFrame();
-        result.samplingFrequency = generatorFrequency * INNER_VALUE_TAB_LEN;
+        result.samplingFrequency = samplingRate.getSamplingRate();
         result.xAxisSenivity = (XAxisSensivity) horizSensChan1.getSelectedItem();
 
         result.data = new byte[2000];
@@ -130,21 +140,19 @@ public class VirtualOscilloscope implements IDso {
     private void calcSin(byte result[]) {
 
         int sum = 0;
-        int divisor = 10;
+        int generatorSampleRate = INNER_VALUE_TAB_LEN * generatorFrequency;
         for (int i = 0; i < result.length; i++) {
 
             double val = (getTabeValue(startX) * amplitude * 128 / 5.0) + 128;
             result[i] = (byte) val;
-            sum += generatorFrequency;
-            while (sum >= divisor) {
+            sum += generatorSampleRate;
+            while (sum >= samplingRate.getSamplingRate()) {
                 startX++;
-                sum -= divisor;
+                if (startX >= INNER_VALUE_TAB_LEN) {
+                    startX = 0;
+                }
+                sum -= samplingRate.getSamplingRate();
             }
-            if (startX >= INNER_VALUE_TAB_LEN) {
-                startX = 0;
-            }
-
-
         }
     }
 
