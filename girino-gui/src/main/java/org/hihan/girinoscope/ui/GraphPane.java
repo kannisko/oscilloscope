@@ -1,7 +1,6 @@
 package org.hihan.girinoscope.ui;
 
 import dso.AquisitionFrame;
-import dso.IDso;
 import org.hihan.girinoscope.ui.Axis.GraphLabel;
 
 import javax.swing.*;

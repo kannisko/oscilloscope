@@ -11,13 +11,13 @@ import java.util.Map;
 /**
  * Created by pawel on 01.12.15.
  */
-public class Dso2100Parallel extends Dso2100 {
+public class Osciloscope2100Parallel extends Osciloscope2100 {
     VirtualIOPort parallelPort;                   // wrapper class for 'Jnpout32.dll'
     short baseAddr;
     short statusAddr;
     short controlAddr;
 
-    public Dso2100Parallel() {
+    public Osciloscope2100Parallel() {
         parallelPort = new VirtualIOPort();
     }
 

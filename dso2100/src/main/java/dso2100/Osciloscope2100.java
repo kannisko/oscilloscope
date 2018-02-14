@@ -1,7 +1,7 @@
 package dso2100;
 
 import dso.AquisitionFrame;
-import dso.IDso;
+import dso.IOsciloscope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,8 +10,8 @@ import java.io.IOException;
 /**
  * Created by Pawel.Piotrowski on 2015-11-27.
  */
-public abstract class Dso2100 implements IDso {
-    Logger LOG = LoggerFactory.getLogger(Dso2100.class.getName());
+public abstract class Osciloscope2100 implements IOsciloscope {
+    Logger LOG = LoggerFactory.getLogger(Osciloscope2100.class.getName());
     private int offset = 0;
 
     public void disconnect() throws IOException {

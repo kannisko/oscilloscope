@@ -50,7 +50,7 @@ public class UI extends JFrame implements IDsoGuiListener{
         });
     }
 
-    private IDso girino = new VirtualOscilloscope(this);
+    private IOsciloscope girino = new VirtualOscilloscope(this);
 
     private CommPortIdentifier portId;
 

@@ -1,8 +1,8 @@
 package org.hihan.girinoscope.ui;
 
 import dso.DsoPortId;
-import dso.IDso;
-import dso2100.Dso2100Parallel;
+import dso.IOsciloscope;
+import dso2100.Osciloscope2100Parallel;
 import org.hihan.girinoscope.Native;
 import org.hihan.girinoscope.ui.images.Icon;
 
@@ -48,7 +48,7 @@ public class UI_old extends JFrame {
         });
     }
 
-    private IDso dso = new Dso2100Parallel();
+    private IOsciloscope dso = new Osciloscope2100Parallel();
 
     private DsoPortId portId;//= new DsoPortId("Dso2100");
     private Map parameters = new HashMap();
@@ -292,7 +292,7 @@ public class UI_old extends JFrame {
     private JMenu createSerialMenu() {
         JMenu menu = new JMenu("Serial port");
         ButtonGroup group = new ButtonGroup();
-        for (final DsoPortId portId : Dso2100Parallel.enumeratePorts()) {
+        for (final DsoPortId portId : Osciloscope2100Parallel.enumeratePorts()) {
             Action setSerialPort = new AbstractAction(portId.getName()) {
 
                 @Override

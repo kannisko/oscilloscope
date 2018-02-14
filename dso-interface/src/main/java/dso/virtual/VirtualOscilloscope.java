@@ -10,7 +10,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Hashtable;
 
-public class VirtualOscilloscope implements IDso {
+public class VirtualOscilloscope implements IOsciloscope {
     static final int WIDTH = 300;
     static final byte VAL1 = 10;
     static final byte VAL2 = (byte) 240;
