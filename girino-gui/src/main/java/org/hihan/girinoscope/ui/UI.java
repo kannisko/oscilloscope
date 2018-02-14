@@ -18,11 +18,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.concurrent.*;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
 
 @SuppressWarnings("serial")
 public class UI extends JFrame implements IDsoGuiListener{
@@ -37,7 +39,7 @@ public class UI extends JFrame implements IDsoGuiListener{
         handler.setFormatter(new SimpleFormatter());
         handler.setLevel(Level.ALL);
         rootLogger.addHandler(handler);
-
+//        getOscList();
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
                 Native.setBestLookAndFeel();
@@ -73,6 +75,20 @@ public class UI extends JFrame implements IDsoGuiListener{
         int max = 10*div;
         yAxisBuilder.setStartValue(-max).setEndValue(max).setIncrement(div);
         graphPane.setYCoordinateSystem(yAxisBuilder.build());
+    }
+
+    private static void getOscList() {
+        ClassLoader callerCL = Thread.currentThread().getContextClassLoader();
+        ServiceLoader<IOsciloscopeFactory> servLoader = ServiceLoader.load(dso.IOsciloscopeFactory.class, callerCL);
+        for (IOsciloscopeFactory driver : servLoader) {
+            String driverName = driver.getClass().getName();
+            try {
+                logger.log(Level.INFO, driverName);
+                Class.forName(driverName);
+            } catch (ClassNotFoundException e) {
+                logger.log(Level.INFO, "Unable to registery driver class '" + driverName + "'", e);
+            }
+        }
     }
 
     private final Action exportLastFrameAction = new AbstractAction("Export last frame", Icon.get("document-save.png")) {

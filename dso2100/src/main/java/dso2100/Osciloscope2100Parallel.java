@@ -17,6 +17,7 @@ public class Osciloscope2100Parallel extends Osciloscope2100 {
     short statusAddr;
     short controlAddr;
 
+
     public Osciloscope2100Parallel() {
         parallelPort = new VirtualIOPort();
     }
