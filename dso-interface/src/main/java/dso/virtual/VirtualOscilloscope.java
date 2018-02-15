@@ -41,8 +41,8 @@ public class VirtualOscilloscope implements IOsciloscope {
     private double[] squareTable;
     private int generatorFrequency = 100;
 
-    public VirtualOscilloscope(final IDsoGuiListener guiListener) {
-        this.guiListener = guiListener;
+    public VirtualOscilloscope() {
+//        this.guiListener = guiListener;
         initConstData();
 
         sinRadioButton.addActionListener(new ActionListener() {
@@ -111,6 +111,21 @@ public class VirtualOscilloscope implements IOsciloscope {
             }
         });
 
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("VirtualOscilloscope");
+        frame.setContentPane(new VirtualOscilloscope().panel);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
+    }
+
+    public static class Factory implements IOsciloscopeFactory {
+        @Override
+        public IOsciloscope createInstance() {
+            return new VirtualOscilloscope();
+        }
     }
 
     private void createUIComponents() {

@@ -31,28 +31,44 @@ public class UI extends JFrame implements IDsoGuiListener{
 
     private static final Logger logger = Logger.getLogger(UI.class.getName());
 
-    public static void main(String[] args) throws Exception {
+    private IOsciloscope girino;// = new VirtualOscilloscope(this);
 
-        Logger rootLogger = Logger.getLogger("org.hihan.girinoscope");
-        rootLogger.setLevel(Level.WARNING);
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(new SimpleFormatter());
-        handler.setLevel(Level.ALL);
-        rootLogger.addHandler(handler);
-//        getOscList();
-        SwingUtilities.invokeAndWait(new Runnable() {
-            public void run() {
-                Native.setBestLookAndFeel();
-                JFrame frame = new UI();
-                frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                frame.pack();
-                frame.setLocationRelativeTo(null);
-                frame.setVisible(true);
-            }
-        });
+    public UI() {
+        setTitle("Girinoscope");
+        setIconImage(Icon.getImage("icon.png"));
+
+        setLayout(new BorderLayout());
+
+//        graphPane = new GraphPane(parameters.get(Parameter.THRESHOLD), parameters.get(Parameter.WAIT_DURATION));
+        graphPane = new GraphPane(1, 100);
+
+        graphPane.setYCoordinateSystem(yAxisBuilder.build());
+        graphPane.setXCoordinateSystem(xAxisBuilder.build());
+
+        graphPane.setPreferredSize(new Dimension(800, 600));
+        add(graphPane, BorderLayout.CENTER);
+
+        setJMenuBar(createMenuBar());
+
+        add(createToolBar(), BorderLayout.NORTH);
+
+        statusBar = new StatusBar();
+        add(statusBar, BorderLayout.SOUTH);
+
+        girino = new VirtualOscilloscope();
+        add(getHardwarePanel(), BorderLayout.EAST);
+
+        stopAcquiringAction.setEnabled(false);
+        exportLastFrameAction.setEnabled(false);
+
+        if (portId != null) {
+            startAcquiringAction.setEnabled(true);
+        } else {
+            startAcquiringAction.setEnabled(false);
+            setStatus("red", "No USB to serial adaptation port detected.");
+        }
+        startAcquiringAction.setEnabled(true);
     }
-
-    private IOsciloscope girino = new VirtualOscilloscope(this);
 
     private CommPortIdentifier portId;
 
@@ -128,41 +144,25 @@ public class UI extends JFrame implements IDsoGuiListener{
     };
     private Axis.Builder xAxisBuilder = new Axis.Builder();
 
-    public UI() {
-        setTitle("Girinoscope");
-        setIconImage(Icon.getImage("icon.png"));
+    public static void main(String[] args) throws Exception {
 
-        setLayout(new BorderLayout());
-
-//        graphPane = new GraphPane(parameters.get(Parameter.THRESHOLD), parameters.get(Parameter.WAIT_DURATION));
-        graphPane = new GraphPane(1, 100);
-
-        graphPane.setYCoordinateSystem(yAxisBuilder.build());
-        graphPane.setXCoordinateSystem(xAxisBuilder.build());
-
-        graphPane.setPreferredSize(new Dimension(800, 600));
-        add(graphPane, BorderLayout.CENTER);
-
-        setJMenuBar(createMenuBar());
-
-        add(createToolBar(), BorderLayout.NORTH);
-
-        statusBar = new StatusBar();
-        add(statusBar, BorderLayout.SOUTH);
-
-
-        add(getHardwarePanel(), BorderLayout.EAST);
-
-        stopAcquiringAction.setEnabled(false);
-        exportLastFrameAction.setEnabled(false);
-
-        if (portId != null) {
-            startAcquiringAction.setEnabled(true);
-        } else {
-            startAcquiringAction.setEnabled(false);
-            setStatus("red", "No USB to serial adaptation port detected.");
-        }
-        startAcquiringAction.setEnabled(true);
+        Logger rootLogger = Logger.getLogger("org.hihan.girinoscope");
+        rootLogger.setLevel(Level.WARNING);
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setFormatter(new SimpleFormatter());
+        handler.setLevel(Level.ALL);
+        rootLogger.addHandler(handler);
+        getOscList();
+        SwingUtilities.invokeAndWait(new Runnable() {
+            public void run() {
+                Native.setBestLookAndFeel();
+                JFrame frame = new UI();
+                frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.setVisible(true);
+            }
+        });
     }
 
     @Override

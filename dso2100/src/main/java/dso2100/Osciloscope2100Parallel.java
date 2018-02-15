@@ -1,6 +1,8 @@
 package dso2100;
 
 import dso.DsoPortId;
+import dso.IOsciloscope;
+import dso.IOsciloscopeFactory;
 import jnpout32.VirtualIOPort;
 
 import javax.swing.*;
@@ -17,6 +19,12 @@ public class Osciloscope2100Parallel extends Osciloscope2100 {
     short statusAddr;
     short controlAddr;
 
+    public static class Factory implements IOsciloscopeFactory {
+
+        public IOsciloscope createInstance() {
+            return new Osciloscope2100Parallel();
+        }
+    }
 
     public Osciloscope2100Parallel() {
         parallelPort = new VirtualIOPort();
