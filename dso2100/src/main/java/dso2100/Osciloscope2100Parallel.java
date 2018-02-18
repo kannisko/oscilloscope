@@ -1,6 +1,7 @@
 package dso2100;
 
 import dso.DsoPortId;
+import dso.IDsoGuiListener;
 import dso.IOsciloscope;
 import dso.IOsciloscopeFactory;
 import jnpout32.VirtualIOPort;
@@ -18,6 +19,7 @@ public class Osciloscope2100Parallel extends Osciloscope2100 {
     short baseAddr;
     short statusAddr;
     short controlAddr;
+    private IDsoGuiListener guiListener;
 
     public static class Factory implements IOsciloscopeFactory {
 
@@ -66,6 +68,12 @@ public class Osciloscope2100Parallel extends Osciloscope2100 {
         List list = new ArrayList();
         list.add(new Dso2100ParallelPortId(0xe800));
         return list;
+    }
+
+    @Override
+    public void setListener(IDsoGuiListener listener) {
+        this.guiListener = listener;
+
     }
 
     public JPanel getPanel() {

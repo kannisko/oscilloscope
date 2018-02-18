@@ -1,7 +1,6 @@
 package org.hihan.girinoscope.ui;
 
 import dso.*;
-import dso.virtual.VirtualOscilloscope;
 import gnu.io.CommPortIdentifier;
 import nati.Serial;
 import org.hihan.girinoscope.Native;
@@ -11,11 +10,13 @@ import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -31,7 +32,9 @@ public class UI extends JFrame implements IDsoGuiListener{
 
     private static final Logger logger = Logger.getLogger(UI.class.getName());
 
-    private IOsciloscope girino;// = new VirtualOscilloscope(this);
+    private static final IOsciloscopeFactory osciloscopeFactories[] = getOscList();
+    private IOsciloscope girino;
+    private JPanel girinoComponent;
 
     public UI() {
         setTitle("Girinoscope");
@@ -55,8 +58,8 @@ public class UI extends JFrame implements IDsoGuiListener{
         statusBar = new StatusBar();
         add(statusBar, BorderLayout.SOUTH);
 
-        girino = new VirtualOscilloscope();
-        add(getHardwarePanel(), BorderLayout.EAST);
+//        girino = new VirtualOscilloscope();
+//        add(getHardwarePanel(), BorderLayout.EAST);
 
         stopAcquiringAction.setEnabled(false);
         exportLastFrameAction.setEnabled(false);
@@ -93,19 +96,27 @@ public class UI extends JFrame implements IDsoGuiListener{
         graphPane.setYCoordinateSystem(yAxisBuilder.build());
     }
 
-    private static void getOscList() {
+    private static IOsciloscopeFactory[] getOscList() {
+        List<IOsciloscopeFactory> result = new ArrayList<>();
+        result.add(new IOsciloscopeFactory() {
+            @Override
+            public IOsciloscope createInstance() {
+                return null;
+            }
+
+            @Override
+            public String toString() {
+                return "<no device selected>";
+            }
+        });
         ClassLoader callerCL = Thread.currentThread().getContextClassLoader();
         ServiceLoader<IOsciloscopeFactory> servLoader = ServiceLoader.load(dso.IOsciloscopeFactory.class, callerCL);
         for (IOsciloscopeFactory driver : servLoader) {
-            String driverName = driver.getClass().getName();
-            try {
-                logger.log(Level.INFO, driverName);
-                Class.forName(driverName);
-            } catch (ClassNotFoundException e) {
-                logger.log(Level.INFO, "Unable to registery driver class '" + driverName + "'", e);
-            }
+            result.add(driver);
         }
+        return result.toArray(new IOsciloscopeFactory[0]);
     }
+
 
     private final Action exportLastFrameAction = new AbstractAction("Export last frame", Icon.get("document-save.png")) {
         {
@@ -152,7 +163,6 @@ public class UI extends JFrame implements IDsoGuiListener{
         handler.setFormatter(new SimpleFormatter());
         handler.setLevel(Level.ALL);
         rootLogger.addHandler(handler);
-        getOscList();
         SwingUtilities.invokeAndWait(new Runnable() {
             public void run() {
                 Native.setBestLookAndFeel();
@@ -217,127 +227,6 @@ public class UI extends JFrame implements IDsoGuiListener{
         }
     };
 
-    private class DataAcquisitionTask extends SwingWorker<Void, AquisitionFrame> {
-
-        private CommPortIdentifier frozenPortId;
-
-  //      private Map<Parameter, Integer> frozenParameters = new HashMap<Parameter, Integer>();
-
-        public DataAcquisitionTask() {
-            startAcquiringAction.setEnabled(false);
-            stopAcquiringAction.setEnabled(true);
-            exportLastFrameAction.setEnabled(true);
-        }
-
-        @Override
-        protected Void doInBackground() throws Exception {
-            while (!isCancelled()) {
-                updateConnection();
-                acquireData();
-            }
-            return null;
-        }
-
-        private void updateConnection() throws Exception {
-            synchronized (UI.this) {
-                frozenPortId = portId;
-//                frozenParameters.putAll(parameters);
-            }
-
-            setStatus("blue", "Contacting Girino on %s...", "frozen");//frozenPortId.getName());
-
-            Future<Void> connection = executor.submit(new Callable<Void>() {
-
-                @Override
-                public Void call() throws Exception {
- //                   girino.setConnection(frozenPortId, frozenParameters);
-                    return null;
-                }
-            });
-            try {
-                connection.get(5, TimeUnit.SECONDS);
-            } catch (TimeoutException e) {
-                throw new TimeoutException("No Girino detected on " + frozenPortId.getName());
-            } catch (InterruptedException e) {
-                connection.cancel(true);
-                throw e;
-            }
-        }
-
-        private void acquireData() throws Exception {
-            setStatus("blue", "Acquiring data from %s...", "frozen");//frozenPortId.getName());
-            Future<AquisitionFrame> acquisition = null;
-            boolean terminated;
-            do {
-                boolean updateConnection = false;
-                synchronized (UI.this) {
-//                    parameters.put(Parameter.THRESHOLD, graphPane.getThreshold());
-//                    parameters.put(Parameter.WAIT_DURATION, graphPane.getWaitDuration());
-//                    updateConnection = !getChanges(frozenParameters).isEmpty() || frozenPortId != portId;
-                }
-                if (updateConnection) {
-                    if (acquisition != null) {
-                        acquisition.cancel(true);
-                    }
-                    terminated = true;
-                } else {
-                    try {
-                        if (acquisition == null) {
-                            acquisition = executor.submit(new Callable<AquisitionFrame>() {
-
-                                @Override
-                                public AquisitionFrame call() throws Exception {
-                                    return girino.acquireData();
-                                }
-                            });
-                        }
-                        AquisitionFrame buffer = acquisition.get(1, TimeUnit.SECONDS);
-                        if (buffer != null) {
-                            publish(buffer);
-                            acquisition = null;
-                            terminated = false;
-                        } else {
-                            terminated = true;
-                        }
-                    } catch (TimeoutException e) {
-                        // Just to wake up regularly.
-                        terminated = false;
-                    } catch (InterruptedException e) {
-                        acquisition.cancel(true);
-                        throw e;
-                    }
-                }
-            } while (!terminated);
-        }
-
-        @Override
-        protected void process(List<AquisitionFrame> buffer) {
-            logger.log(Level.FINE, "{0} data buffer(s) to display.", buffer.size());
-            graphPane.setData(buffer.get(buffer.size() - 1));
-        }
-
-        @Override
-        protected void done() {
-            startAcquiringAction.setEnabled(true);
-            stopAcquiringAction.setEnabled(false);
-            exportLastFrameAction.setEnabled(true);
-            try {
-                if (!isCancelled()) {
-                    get();
-                }
-                setStatus("blue", "Done acquiring data from %s.", frozenPortId.getName());
-            } catch (ExecutionException e) {
-                setStatus("red", e.getCause().getMessage());
-            } catch (Exception e) {
-                setStatus("red", e.getMessage());
-            }
-        }
-    }
-
-    JPanel getHardwarePanel(){
-        return girino.getPanel();
-
-    }
     @Override
     public void dispose() {
         try {
@@ -350,11 +239,75 @@ public class UI extends JFrame implements IDsoGuiListener{
             } catch (InterruptedException e) {
                 logger.log(Level.WARNING, "Serial line not responding.", e);
             }
-            girino.disconnect();
+            if (girino != null) {
+                girino.disconnect();
+            }
         } catch (IOException e) {
             logger.log(Level.WARNING, "When disconnecting from Girino.", e);
         }
         super.dispose();
+    }
+
+    JPanel getHardwarePanel() {
+        return girino.getPanel();
+
+    }
+
+    private JComponent createToolBar() {
+        final UI main = this;
+        JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        JComboBox osciloscopeFactoryCombo = new JComboBox(osciloscopeFactories);
+        osciloscopeFactoryCombo.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                Object o = osciloscopeFactoryCombo.getSelectedItem();
+                IOsciloscopeFactory factory = (IOsciloscopeFactory) o;
+                if (girino != null) {
+                    try {
+                        girino.disconnect();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    main.remove(girinoComponent);
+                    girinoComponent = null;
+                    girino = null;
+                }
+                girino = factory.createInstance();
+                if (girino == null) {
+                    main.revalidate();
+                    main.repaint();
+                    return;
+                }
+                girino.setListener(main);
+                girinoComponent = girino.getPanel();
+                main.add(girinoComponent, BorderLayout.EAST);
+            }
+        });
+
+        toolBar.add(osciloscopeFactoryCombo);
+
+        final Component start = toolBar.add(startAcquiringAction);
+        final Component stop = toolBar.add(stopAcquiringAction);
+        start.addPropertyChangeListener("enabled", new PropertyChangeListener() {
+
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (!start.isEnabled()) {
+                    stop.requestFocusInWindow();
+                }
+            }
+        });
+        stop.addPropertyChangeListener("enabled", new PropertyChangeListener() {
+
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (!stop.isEnabled()) {
+                    start.requestFocusInWindow();
+                }
+            }
+        });
+        toolBar.add(exportLastFrameAction);
+        return toolBar;
     }
 
     private JMenuBar createMenuBar() {
@@ -541,31 +494,124 @@ public class UI extends JFrame implements IDsoGuiListener{
         return menu;
     }
 
-    private JComponent createToolBar() {
-        JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
-        final Component start = toolBar.add(startAcquiringAction);
-        final Component stop = toolBar.add(stopAcquiringAction);
-        start.addPropertyChangeListener("enabled", new PropertyChangeListener() {
+    private class DataAcquisitionTask extends SwingWorker<Void, AquisitionFrame> {
 
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if (!start.isEnabled()) {
-                    stop.requestFocusInWindow();
-                }
-            }
-        });
-        stop.addPropertyChangeListener("enabled", new PropertyChangeListener() {
+        private CommPortIdentifier frozenPortId;
 
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if (!stop.isEnabled()) {
-                    start.requestFocusInWindow();
-                }
+        //      private Map<Parameter, Integer> frozenParameters = new HashMap<Parameter, Integer>();
+
+        public DataAcquisitionTask() {
+            startAcquiringAction.setEnabled(false);
+            stopAcquiringAction.setEnabled(true);
+            exportLastFrameAction.setEnabled(true);
+        }
+
+        @Override
+        protected Void doInBackground() throws Exception {
+            while (!isCancelled()) {
+                updateConnection();
+                acquireData();
             }
-        });
-        toolBar.add(exportLastFrameAction);
-        return toolBar;
+            return null;
+        }
+
+        private void updateConnection() throws Exception {
+            synchronized (UI.this) {
+                frozenPortId = portId;
+//                frozenParameters.putAll(parameters);
+            }
+
+            setStatus("blue", "Contacting Girino on %s...", "frozen");//frozenPortId.getName());
+
+            Future<Void> connection = executor.submit(new Callable<Void>() {
+
+                @Override
+                public Void call() throws Exception {
+                    //                   girino.setConnection(frozenPortId, frozenParameters);
+                    return null;
+                }
+            });
+            try {
+                connection.get(5, TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                throw new TimeoutException("No Girino detected on " + frozenPortId.getName());
+            } catch (InterruptedException e) {
+                connection.cancel(true);
+                throw e;
+            }
+        }
+
+        private void acquireData() throws Exception {
+            if (girino == null) {
+                return;
+            }
+            setStatus("blue", "Acquiring data from %s...", "frozen");//frozenPortId.getName());
+            Future<AquisitionFrame> acquisition = null;
+            boolean terminated;
+            do {
+                boolean updateConnection = false;
+                synchronized (UI.this) {
+//                    parameters.put(Parameter.THRESHOLD, graphPane.getThreshold());
+//                    parameters.put(Parameter.WAIT_DURATION, graphPane.getWaitDuration());
+//                    updateConnection = !getChanges(frozenParameters).isEmpty() || frozenPortId != portId;
+                }
+                if (updateConnection) {
+                    if (acquisition != null) {
+                        acquisition.cancel(true);
+                    }
+                    terminated = true;
+                } else {
+                    try {
+                        if (acquisition == null) {
+                            acquisition = executor.submit(new Callable<AquisitionFrame>() {
+
+                                @Override
+                                public AquisitionFrame call() throws Exception {
+                                    return girino.acquireData();
+                                }
+                            });
+                        }
+                        AquisitionFrame buffer = acquisition.get(1, TimeUnit.SECONDS);
+                        if (buffer != null) {
+                            publish(buffer);
+                            acquisition = null;
+                            terminated = false;
+                        } else {
+                            terminated = true;
+                        }
+                    } catch (TimeoutException e) {
+                        // Just to wake up regularly.
+                        terminated = false;
+                    } catch (InterruptedException e) {
+                        acquisition.cancel(true);
+                        throw e;
+                    }
+                }
+            } while (!terminated);
+        }
+
+        @Override
+        protected void process(List<AquisitionFrame> buffer) {
+            logger.log(Level.FINE, "{0} data buffer(s) to display.", buffer.size());
+            graphPane.setData(buffer.get(buffer.size() - 1));
+        }
+
+        @Override
+        protected void done() {
+            startAcquiringAction.setEnabled(true);
+            stopAcquiringAction.setEnabled(false);
+            exportLastFrameAction.setEnabled(true);
+            try {
+                if (!isCancelled()) {
+                    get();
+                }
+                setStatus("blue", "Done acquiring data from %s.", frozenPortId.getName());
+            } catch (ExecutionException e) {
+                setStatus("red", e.getCause().getMessage());
+            } catch (Exception e) {
+                setStatus("red", e.getMessage());
+            }
+        }
     }
 
     private void setStatus(String color, String message, Object... arguments) {

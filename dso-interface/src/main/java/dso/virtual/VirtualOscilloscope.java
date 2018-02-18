@@ -42,7 +42,6 @@ public class VirtualOscilloscope implements IOsciloscope {
     private int generatorFrequency = 100;
 
     public VirtualOscilloscope() {
-//        this.guiListener = guiListener;
         initConstData();
 
         sinRadioButton.addActionListener(new ActionListener() {
@@ -138,6 +137,11 @@ public class VirtualOscilloscope implements IOsciloscope {
 
     public void disconnect() throws IOException {
 
+    }
+
+    @Override
+    public void setListener(IDsoGuiListener listener) {
+        this.guiListener = listener;
     }
 
     public AquisitionFrame acquireData() throws Exception {

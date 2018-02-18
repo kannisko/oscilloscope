@@ -11,6 +11,6 @@ public interface IOsciloscope {
 //    boolean setConnection(DsoPortId portId, Map parameters ) throws Exception;
     void disconnect() throws IOException;
 
-
+    void setListener(IDsoGuiListener listener);
     JPanel getPanel();
 }
