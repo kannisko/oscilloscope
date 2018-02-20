@@ -1,19 +1,20 @@
 package arduinoscope;
 
+import dso.AquisitionFrame;
+import dso.IDsoGuiListener;
+import dso.IOsciloscope;
+import dso.IOsciloscopeFactory;
 import gnu.io.CommPortIdentifier;
 import nati.Serial;
 
+import javax.swing.*;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Enumeration;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
-public class Scope extends Serial{
+
+public class Scope extends Serial implements IOsciloscope {
+
 
     private static final int DATA_BUFFER_SIZE = 1280;
     private static final String ARDUSCOPE_VERSION = "#version 1.0";
@@ -36,6 +37,29 @@ public class Scope extends Serial{
 
     private static final int RETRY_CNT = 100;
 
+    private Panel panel;
+    private IDsoGuiListener dsoGuiListener;
+
+    private Scope() {
+        this.panel = new Panel();
+        this.panel.setScope(this);
+
+    }
+
+    public EnumeratedPort[] getEnumeratedPorts() {
+        List<CommPortIdentifier> ports = Serial.enumeratePorts();
+
+        EnumeratedPort result[] = new EnumeratedPort[ports.size() + 1];
+
+        result[0] = new EnumeratedPort();
+        int i = 1;
+        for (CommPortIdentifier id : ports) {
+            result[i++] = new EnumeratedPort(id);
+        }
+        return result;
+    }
+
+
     public boolean initDevice() throws IOException, InterruptedException {
         for( int i=0; i<RETRY_CNT; i++) {
             writeLine(CMD_ACTION_RESET);
@@ -56,6 +80,16 @@ public class Scope extends Serial{
         return result;
     }
 
+    @Override
+    public AquisitionFrame acquireData() throws Exception {
+        return null;
+    }
+
+    @Override
+    public void disconnect() throws IOException {
+
+    }
+
     public static void main(String args[]) throws Exception {
         List<CommPortIdentifier> ports = Serial.enumeratePorts();
         if(ports.size()<=0){
@@ -71,4 +105,49 @@ public class Scope extends Serial{
         scope.close();
     }
 
+    @Override
+    public void setListener(IDsoGuiListener listener) {
+        this.dsoGuiListener = listener;
+
+    }
+
+    @Override
+    public JPanel getPanel() {
+        return panel.getPanel();
+    }
+
+    public static class Factory implements IOsciloscopeFactory {
+
+        public IOsciloscope createInstance() {
+            return new Scope();
+        }
+
+        @Override
+        public String toString() {
+            return "Arduinoscope";
+        }
+    }
+
+    public static class EnumeratedPort {
+        private CommPortIdentifier portIdentifier;
+
+        public EnumeratedPort(CommPortIdentifier portIdentifier) {
+            this.portIdentifier = portIdentifier;
+        }
+
+        public EnumeratedPort() {
+        }
+
+        CommPortIdentifier getPort() {
+            return portIdentifier;
+        }
+
+        @Override
+        public String toString() {
+            if (portIdentifier != null) {
+                return portIdentifier.getName();
+            }
+            return "<no port selected>";
+        }
+    }
 }

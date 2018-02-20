@@ -22,7 +22,7 @@ public class VirtualOscilloscope implements IOsciloscope {
     boolean isVal1 = true;
     float amplitude = 1.0f;
     int startX = 0;
-    ;
+
     private JPanel panel;
     private JComboBox verticalSensChan1;
     private JPanel channel1;
