@@ -59,6 +59,25 @@ public class Scope extends Serial implements IOsciloscope {
         return result;
     }
 
+    public boolean connect(EnumeratedPort enumeratedPort) {
+        try {
+            disconnect();
+            if (enumeratedPort.getPort() != null) {
+                connect(enumeratedPort.getPort());
+                return initDevice();
+            }
+            return true;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+
+    }
 
     public boolean initDevice() throws IOException, InterruptedException {
         for( int i=0; i<RETRY_CNT; i++) {
@@ -87,6 +106,7 @@ public class Scope extends Serial implements IOsciloscope {
 
     @Override
     public void disconnect() throws IOException {
+        close();
 
     }
 
