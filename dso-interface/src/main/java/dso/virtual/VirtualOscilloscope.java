@@ -125,6 +125,11 @@ public class VirtualOscilloscope implements IOsciloscope {
         public IOsciloscope createInstance() {
             return new VirtualOscilloscope();
         }
+
+        @Override
+        public String toString() {
+            return "VirtualOscilloscope";
+        }
     }
 
     private void createUIComponents() {

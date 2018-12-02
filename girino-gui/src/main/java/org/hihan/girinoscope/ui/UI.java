@@ -16,10 +16,8 @@ import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.ServiceLoader;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -29,6 +27,8 @@ import java.util.logging.SimpleFormatter;
 
 @SuppressWarnings("serial")
 public class UI extends JFrame implements IDsoGuiListener{
+    private static String PROPERTIES_NAME = "osiloscope.settings";
+    private static String PROP_DEVICE_NAME = "device";
 
     private static final Logger logger = Logger.getLogger(UI.class.getName());
 
@@ -36,11 +36,19 @@ public class UI extends JFrame implements IDsoGuiListener{
     private IOsciloscope girino;
     private JPanel girinoComponent;
 
+    private Properties userSettings = new Properties();
+
     public UI() {
         setTitle("Girinoscope");
         setIconImage(Icon.getImage("icon.png"));
 
         setLayout(new BorderLayout());
+
+        try {
+            userSettings.loadFromXML(new FileInputStream(new File(PROPERTIES_NAME)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 //        graphPane = new GraphPane(parameters.get(Parameter.THRESHOLD), parameters.get(Parameter.WAIT_DURATION));
         graphPane = new GraphPane(1, 100);
@@ -281,10 +289,23 @@ public class UI extends JFrame implements IDsoGuiListener{
                 girino.setListener(main);
                 girinoComponent = girino.getPanel();
                 main.add(girinoComponent, BorderLayout.EAST);
+                userSettings.setProperty(PROP_DEVICE_NAME, factory.toString());
+                try {
+                    userSettings.storeToXML(new FileOutputStream(new File(PROPERTIES_NAME)), "", "UTF-8");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
         toolBar.add(osciloscopeFactoryCombo);
+        String driver = userSettings.getProperty(PROP_DEVICE_NAME);
+        for (int i = 0; i < osciloscopeFactoryCombo.getItemCount(); i++) {
+            if (osciloscopeFactoryCombo.getItemAt(i).toString().equals(driver)) {
+                osciloscopeFactoryCombo.setSelectedIndex(i);
+                break;
+            }
+        }
 
         final Component start = toolBar.add(startAcquiringAction);
         final Component stop = toolBar.add(stopAcquiringAction);
