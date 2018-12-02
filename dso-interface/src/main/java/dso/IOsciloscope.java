@@ -2,6 +2,7 @@ package dso;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.util.Properties;
 
 /**
  * Created by Pawel.Piotrowski on 2015-11-27.
@@ -13,4 +14,6 @@ public interface IOsciloscope {
 
     void setListener(IDsoGuiListener listener);
     JPanel getPanel();
+
+    void setUserProperties(String userSettingPrefix, Properties userSettings);
 }

@@ -286,6 +286,7 @@ public class UI extends JFrame implements IDsoGuiListener{
                     main.repaint();
                     return;
                 }
+                girino.setUserProperties(factory.toString(), userSettings);
                 girino.setListener(main);
                 girinoComponent = girino.getPanel();
                 main.add(girinoComponent, BorderLayout.EAST);
