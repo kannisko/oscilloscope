@@ -2,6 +2,7 @@ package dso2100;
 
 import dso.AquisitionFrame;
 import dso.IOsciloscope;
+import dso.PropOsciloscope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,7 @@ import java.io.IOException;
 /**
  * Created by Pawel.Piotrowski on 2015-11-27.
  */
-public abstract class Osciloscope2100 implements IOsciloscope {
+public abstract class Osciloscope2100 extends PropOsciloscope {
     Logger LOG = LoggerFactory.getLogger(Osciloscope2100.class.getName());
     private int offset = 0;
 

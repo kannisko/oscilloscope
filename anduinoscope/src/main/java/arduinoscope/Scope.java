@@ -10,6 +10,7 @@ import nati.Serial;
 import javax.swing.*;
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 
@@ -134,6 +135,11 @@ public class Scope extends Serial implements IOsciloscope {
     @Override
     public JPanel getPanel() {
         return panel.getPanel();
+    }
+
+    @Override
+    public void setUserProperties(String userSettingPrefix, Properties userSettings) {
+
     }
 
     public static class Factory implements IOsciloscopeFactory {

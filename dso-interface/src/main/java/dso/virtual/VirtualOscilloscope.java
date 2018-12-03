@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Hashtable;
+import java.util.Properties;
 
 public class VirtualOscilloscope extends PropOsciloscope {
     static final int WIDTH = 300;
@@ -34,7 +35,7 @@ public class VirtualOscilloscope extends PropOsciloscope {
     private JSlider frequencySlider;
     private JComboBox horizSensChan1;
     private JComboBox samplingRateCombo;
-    private SamplingRate samplingRate = SamplingRate.sr1kS;
+    private ComboWithProps<SamplingRate>  samplingRate;
     private Shape shape = Shape.SIN;
     private double[] sinTable;
     private double[] triangleTable;
@@ -102,20 +103,40 @@ public class VirtualOscilloscope extends PropOsciloscope {
             }
         });
 
-        samplingRateCombo.setModel(new DefaultComboBoxModel(SamplingRate.values()));
-        samplingRateCombo.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                Object o = samplingRateCombo.getSelectedItem();
-                samplingRate = (SamplingRate)o;
-            }
-        });
 
     }
 
     @Override
     protected void loadUserSettings() {
-
+        samplingRate = new ComboWithProps(samplingRateCombo
+                ,SamplingRate.values()
+                ,this.userSettings
+                ,this.userSettingsPrefix+".samplingRate");
     }
+
+    public static class ComboWithProps<T> {
+        T value;
+        ComboWithProps(JComboBox combo,T model[], Properties userSettings, String propName){
+            combo.setModel(new DefaultComboBoxModel(model));
+            combo.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    value = (T)combo.getSelectedItem();
+                    userSettings.setProperty(propName,value.toString());
+                }
+            });
+            String valName  = userSettings.getProperty(propName);
+            for (int i = 0; i < combo.getItemCount(); i++) {
+                if (combo.getItemAt(i).toString().equals(valName)) {
+                    combo.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+        T getValue(){
+            return value;
+        }
+    }
+
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("VirtualOscilloscope");
@@ -157,7 +178,7 @@ public class VirtualOscilloscope extends PropOsciloscope {
     public AquisitionFrame acquireData() throws Exception {
         Thread.sleep(100);
         AquisitionFrame result = new AquisitionFrame();
-        result.samplingFrequency = samplingRate.getSamplingRate();
+        result.samplingFrequency = samplingRate.getValue().getSamplingRate();
         result.xAxisSenivity = (XAxisSensivity) horizSensChan1.getSelectedItem();
 
         result.data = new byte[2000];
@@ -175,12 +196,12 @@ public class VirtualOscilloscope extends PropOsciloscope {
             double val = (getTabeValue(startX) * amplitude * 128 / 5.0) + 128;
             result[i] = (byte) val;
             sum += generatorSampleRate;
-            while (sum >= samplingRate.getSamplingRate()) {
+            while (sum >= samplingRate.getValue().getSamplingRate()) {
                 startX++;
                 if (startX >= INNER_VALUE_TAB_LEN) {
                     startX = 0;
                 }
-                sum -= samplingRate.getSamplingRate();
+                sum -= samplingRate.getValue().getSamplingRate();
             }
         }
     }

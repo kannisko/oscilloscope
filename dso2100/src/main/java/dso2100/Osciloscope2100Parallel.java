@@ -21,6 +21,11 @@ public class Osciloscope2100Parallel extends Osciloscope2100 {
     short controlAddr;
     private IDsoGuiListener guiListener;
 
+    @Override
+    protected void loadUserSettings() {
+
+    }
+
     public static class Factory implements IOsciloscopeFactory {
 
         public IOsciloscope createInstance() {
