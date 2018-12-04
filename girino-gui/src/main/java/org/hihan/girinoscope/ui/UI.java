@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-
+//-Dsun.awt.disablegrab=true
 @SuppressWarnings("serial")
 public class UI extends JFrame implements IDsoGuiListener{
     private static String PROPERTIES_NAME = "osiloscope.settings";
