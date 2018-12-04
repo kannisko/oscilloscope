@@ -1,6 +1,8 @@
 package dso.virtual;
 
 import dso.*;
+import dso.guihelper.ComboWithProps;
+import dso.guihelper.GroupRadioWithProps;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -30,13 +32,14 @@ public class VirtualOscilloscope extends PropOsciloscope {
     private JRadioButton sinRadioButton;
     private JRadioButton pulseRadioButton;
     private JRadioButton triangleRadioButton;
+    GroupRadioWithProps<Shape> shape;
     private JTextField amplitudeText;
     private JSlider amplitudeSlider;
     private JSlider frequencySlider;
     private JComboBox horizSensChan1;
+
     private JComboBox samplingRateCombo;
-    private ComboWithProps<SamplingRate>  samplingRate;
-    private Shape shape = Shape.SIN;
+    private ComboWithProps<SamplingRate> samplingRate;
     private double[] sinTable;
     private double[] triangleTable;
     private double[] squareTable;
@@ -45,23 +48,6 @@ public class VirtualOscilloscope extends PropOsciloscope {
     public VirtualOscilloscope() {
         initConstData();
 
-        sinRadioButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                shape = Shape.SIN;
-            }
-        });
-        pulseRadioButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                shape = Shape.PULSE;
-
-            }
-        });
-        triangleRadioButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                shape = Shape.TRIANLE;
-
-            }
-        });
         amplitudeSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent changeEvent) {
                 int val = amplitudeSlider.getValue();
@@ -87,54 +73,41 @@ public class VirtualOscilloscope extends PropOsciloscope {
             }
         });
 
-        verticalSensChan1.setModel(new DefaultComboBoxModel(new Object[]{YAxisSensivity.S_1mV, YAxisSensivity.S_2mV, YAxisSensivity.S_5mV}));
-        verticalSensChan1.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                Object o = verticalSensChan1.getSelectedItem();
-                guiListener.setYAxis((YAxisSensivity) o);
-            }
-        });
-
-        horizSensChan1.setModel(new DefaultComboBoxModel(XAxisSensivity.values()));
-        horizSensChan1.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                Object o = horizSensChan1.getSelectedItem();
-                guiListener.setXAxis((XAxisSensivity) o);
-            }
-        });
 
 
     }
 
     @Override
     protected void loadUserSettings() {
-        samplingRate = new ComboWithProps(samplingRateCombo
-                ,SamplingRate.values()
-                ,this.userSettings
-                ,this.userSettingsPrefix+".samplingRate");
-    }
 
-    public static class ComboWithProps<T> {
-        T value;
-        ComboWithProps(JComboBox combo,T model[], Properties userSettings, String propName){
-            combo.setModel(new DefaultComboBoxModel(model));
-            combo.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    value = (T)combo.getSelectedItem();
-                    userSettings.setProperty(propName,value.toString());
-                }
-            });
-            String valName  = userSettings.getProperty(propName);
-            for (int i = 0; i < combo.getItemCount(); i++) {
-                if (combo.getItemAt(i).toString().equals(valName)) {
-                    combo.setSelectedIndex(i);
-                    break;
-                }
-            }
-        }
-        T getValue(){
-            return value;
-        }
+        this.shape = new GroupRadioWithProps<>(
+                new JRadioButton[]{sinRadioButton,pulseRadioButton,triangleRadioButton}
+                ,new Shape[]{Shape.SIN,Shape.PULSE,Shape.TRIANLE}
+                ,Shape.SIN
+                ,this.userSettings
+                ,this.userSettingsPrefix+".gen.shape"
+                ,null);
+
+        new ComboWithProps<>(verticalSensChan1
+                ,new YAxisSensivity[]{YAxisSensivity.S_1mV, YAxisSensivity.S_2mV, YAxisSensivity.S_5mV}
+                ,YAxisSensivity.S_2mV
+                ,this.userSettings
+                ,this.userSettingsPrefix+".ch1.vertSens"
+                ,o->guiListener.setYAxis(o));
+
+        new ComboWithProps<>(horizSensChan1
+                , XAxisSensivity.values()
+                , XAxisSensivity.S_50ms
+                ,this.userSettings
+                ,this.userSettingsPrefix+".ch1.horizSens",
+                o->this.guiListener.setXAxis(o));
+
+        samplingRate = new ComboWithProps(samplingRateCombo
+                , SamplingRate.values()
+                , SamplingRate.sr10kS
+                , this.userSettings
+                , this.userSettingsPrefix + ".samplingRate"
+        ,null);
     }
 
 
@@ -207,7 +180,7 @@ public class VirtualOscilloscope extends PropOsciloscope {
     }
 
     private double getTabeValue(int i) {
-        switch (shape) {
+        switch (shape.getValue()) {
             case SIN:
                 return sinTable[i];
             case PULSE:

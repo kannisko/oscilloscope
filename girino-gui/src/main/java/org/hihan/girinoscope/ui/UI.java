@@ -11,6 +11,8 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
@@ -38,6 +40,7 @@ public class UI extends JFrame implements IDsoGuiListener{
 
     private Properties userSettings = new Properties();
 
+
     public UI() {
         setTitle("Girinoscope");
         setIconImage(Icon.getImage("icon.png"));
@@ -45,10 +48,20 @@ public class UI extends JFrame implements IDsoGuiListener{
         setLayout(new BorderLayout());
 
         try {
-            userSettings.loadFromXML(new FileInputStream(new File(PROPERTIES_NAME)));
+            userSettings.load(new FileInputStream(new File(PROPERTIES_NAME)));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent event) {
+                try {
+                    userSettings.store(new FileOutputStream(new File(PROPERTIES_NAME)),"UTF-8");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
 //        graphPane = new GraphPane(parameters.get(Parameter.THRESHOLD), parameters.get(Parameter.WAIT_DURATION));
         graphPane = new GraphPane(1, 100);
@@ -286,16 +299,18 @@ public class UI extends JFrame implements IDsoGuiListener{
                     main.repaint();
                     return;
                 }
-                girino.setUserProperties(factory.toString(), userSettings);
                 girino.setListener(main);
+                girino.setUserProperties(factory.toString(), userSettings);
                 girinoComponent = girino.getPanel();
                 main.add(girinoComponent, BorderLayout.EAST);
                 userSettings.setProperty(PROP_DEVICE_NAME, factory.toString());
-                try {
-                    userSettings.storeToXML(new FileOutputStream(new File(PROPERTIES_NAME)), "", "UTF-8");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                main.revalidate();
+                main.repaint();
+//                try {
+////                    userSettings.storeToXML(new FileOutputStream(new File(PROPERTIES_NAME)), "", "UTF-8");
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
             }
         });
 
