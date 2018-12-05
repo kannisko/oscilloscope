@@ -1,0 +1,17 @@
+Virtual
+- ogarbnąć ustawienia amp i freq, z edita tez, do settings
+
+UI
+- rysowanie poza ramką wyeliminowsać
+- pierwasz ramka z tyłka
+- po zwmianie na nodevice czyścić ramkę
+-zapis ramek do pliku
+-podgląd ramek z pliku - osobny device
+
+arduino
+- init z comba bez zwiechy
+- zbieranie i akwizycja danych , na razie na rympał (freq, i trigger)
+- ustawianie triggera i levela
+- ustwaianie freq
+- ustawianie paramsów ardu w init
+
