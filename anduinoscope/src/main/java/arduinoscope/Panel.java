@@ -8,6 +8,15 @@ public class Panel {
     private JPanel panel;
     private JComboBox portComboBox;
     public JComboBox horizontalSens;
+    private JRadioButton triggerModeOff;
+    private JRadioButton triggerModeAuto;
+    private JRadioButton triggerModeNormal;
+    private JRadioButton trModeSingle;
+    private JRadioButton trModeSweep;
+    private JRadioButton slopeRise;
+    private JRadioButton slopeFall;
+    private JSlider triggerLevel;
+    private JButton startButton;
 
     private Scope scope;
 
