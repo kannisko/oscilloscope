@@ -106,6 +106,9 @@ public class Serial implements Closeable {
     }
 
     public String readLine() throws IOException {
+        if (input == null) {
+            return "";
+        }
         StringBuilder line = new StringBuilder();
         int length = 0;
         try {
@@ -162,6 +165,9 @@ public class Serial implements Closeable {
     }
 
     public void writeLine(String line) throws IOException {
+        if (output == null) {
+            return;
+        }
         for (int i = 0; i < line.length(); ++i) {
             output.write(line.charAt(i));
         }

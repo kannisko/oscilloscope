@@ -7,11 +7,8 @@ import dso.guihelper.GroupRadioWithProps;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Hashtable;
-import java.util.Properties;
 
 public class VirtualOscilloscope extends PropOsciloscope {
     static final int WIDTH = 300;
@@ -93,7 +90,7 @@ public class VirtualOscilloscope extends PropOsciloscope {
                 ,YAxisSensivity.S_2mV
                 ,this.userSettings
                 ,this.userSettingsPrefix+".ch1.vertSens"
-                ,o->guiListener.setYAxis(o));
+                , o -> guiListener.setYAxis(o, YAxisPolarity.AC));
 
         new ComboWithProps<>(horizSensChan1
                 , XAxisSensivity.values()

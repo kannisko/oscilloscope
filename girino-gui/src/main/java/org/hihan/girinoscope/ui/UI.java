@@ -110,10 +110,11 @@ public class UI extends JFrame implements IDsoGuiListener{
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
-    public void setYAxis(YAxisSensivity yAxisSensivity) {
+    public void setYAxis(YAxisSensivity yAxisSensivity, YAxisPolarity yAxisPolarity) {
         int div = yAxisSensivity.getMilivoltsPerDiv();
-        int max = 10*div;
-        yAxisBuilder.setStartValue(-max).setEndValue(max).setIncrement(div);
+        int max = 5 * div;
+        int min = yAxisPolarity == YAxisPolarity.DC ? 0 : -max;
+        yAxisBuilder.setStartValue(min).setEndValue(max).setIncrement(div);
         graphPane.setYCoordinateSystem(yAxisBuilder.build());
     }
 
@@ -292,6 +293,7 @@ public class UI extends JFrame implements IDsoGuiListener{
                     main.remove(girinoComponent);
                     girinoComponent = null;
                     girino = null;
+                    graphPane.setData(null);
                 }
                 girino = factory.createInstance();
                 if (girino == null) {

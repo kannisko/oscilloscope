@@ -1,9 +1,7 @@
 package arduinoscope;
 
-import dso.AquisitionFrame;
-import dso.IDsoGuiListener;
-import dso.IOsciloscope;
-import dso.IOsciloscopeFactory;
+import dso.*;
+import dso.guihelper.ComboWithProps;
 import gnu.io.CommPortIdentifier;
 import nati.Serial;
 
@@ -32,7 +30,10 @@ public class Scope extends Serial implements IOsciloscope {
 
 
     private static final Logger logger = Logger.getLogger(Scope.class.getName());
-
+    HorizSensWithSampleRate selectedHoriz;
+    int lastSettedSpeed = -1;
+    private String userSettingPrefix;
+    private Properties userSettings;
 
 
 
@@ -93,6 +94,21 @@ public class Scope extends Serial implements IOsciloscope {
         return false;
     }
 
+    public static void main(String args[]) throws Exception {
+        List<CommPortIdentifier> ports = Serial.enumeratePorts();
+        if (ports.size() <= 0) {
+            return;
+        }
+        CommPortIdentifier port = ports.get(0);
+        Scope scope = new Scope();
+        scope.connect(port);
+        boolean init = scope.initDevice();
+        logger.warning("init :" + (init ? "OK" : "NOT OK"));
+        scope.setSpeed(5);
+
+        scope.close();
+    }
+
     public byte[] getData() throws IOException {
         writeLine(CMD_ACTION_ACQUIRE_DATA);
         byte result[] = new byte[DATA_BUFFER_SIZE];
@@ -100,35 +116,44 @@ public class Scope extends Serial implements IOsciloscope {
         return result;
     }
 
-    @Override
-    public AquisitionFrame acquireData() throws Exception {
-        return null;
+    private void setSpeed(int divisor) throws IOException {
+        writeLine(CMD_SET_SPEED + " " + divisor);
+        String res = readLine();
+        lastSettedSpeed = divisor;
+        logger.warning("setSpeed:" + res);
+    }
+
+    void updateParams() throws IOException {
+        if (lastSettedSpeed != selectedHoriz.divisor) {
+            setSpeed(selectedHoriz.divisor);
+        }
+
     }
 
     @Override
     public void disconnect() throws IOException {
         close();
-
     }
 
-    public static void main(String args[]) throws Exception {
-        List<CommPortIdentifier> ports = Serial.enumeratePorts();
-        if(ports.size()<=0){
-            return;
+    @Override
+    public AquisitionFrame acquireData() throws Exception {
+        updateParams();
+        byte buffer[] = getData();
+        if (buffer == null) {
+            return null;
         }
-        CommPortIdentifier port = ports.get(0);
-        Scope scope = new Scope();
-        scope.connect(port);
-        boolean init = scope.initDevice();
-        logger.warning("init :"+( init? "OK":"NOT OK"));
-
-
-        scope.close();
+        AquisitionFrame frame = new AquisitionFrame();
+        frame.samplingFrequency = selectedHoriz.sampleRate;
+        frame.xAxisSenivity = selectedHoriz.xAxisSensivity;
+        frame.data = buffer;
+        return frame;
     }
 
     @Override
     public void setListener(IDsoGuiListener listener) {
         this.dsoGuiListener = listener;
+        //  this.dsoGuiListener.setXAxis(XAxisSensivity.S_20ms);
+        this.dsoGuiListener.setYAxis(YAxisSensivity.S_1V, YAxisPolarity.DC);
 
     }
 
@@ -139,7 +164,18 @@ public class Scope extends Serial implements IOsciloscope {
 
     @Override
     public void setUserProperties(String userSettingPrefix, Properties userSettings) {
+        this.userSettingPrefix = userSettingPrefix;
+        this.userSettings = userSettings;
 
+        new ComboWithProps<>(panel.horizontalSens
+                , HorizSensWithSampleRate.values()
+                , HorizSensWithSampleRate.h_20ms
+                , this.userSettings
+                , this.userSettingPrefix + ".ch.horizSens",
+                o -> {
+                    selectedHoriz = o;
+                    this.dsoGuiListener.setXAxis(o.xAxisSensivity);
+                });
     }
 
     public static class Factory implements IOsciloscopeFactory {
@@ -176,4 +212,35 @@ public class Scope extends Serial implements IOsciloscope {
             return "<no port selected>";
         }
     }
+
+    /*
+    128	9.74 ± 0.04
+    64	19.39 ± 0.06
+    32	37.3 ± 0.6
+    16	75.5 ± 0.3
+    8	153 ± 2
+
+     */
+    private enum HorizSensWithSampleRate {
+        h_1ms(XAxisSensivity.S_1ms, 153000, 3),
+        h_2ms(XAxisSensivity.S_2ms, 75500, 4),
+        h_5ms(XAxisSensivity.S_5ms, 37300, 5),
+        h_10ms(XAxisSensivity.S_10ms, 19390, 6),
+        h_20ms(XAxisSensivity.S_20ms, 9740, 7),
+        ;
+        private XAxisSensivity xAxisSensivity;
+        private int sampleRate;
+        private int divisor;
+
+        HorizSensWithSampleRate(XAxisSensivity xAxisSensivity, int sampleRate, int divisor) {
+            this.xAxisSensivity = xAxisSensivity;
+            this.sampleRate = sampleRate;
+            this.divisor = divisor;
+        }
+
+        public String toString() {
+            return xAxisSensivity.toString();
+        }
+    }
+
 }

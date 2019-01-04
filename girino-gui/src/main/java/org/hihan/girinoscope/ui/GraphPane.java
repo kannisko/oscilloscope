@@ -186,6 +186,7 @@ public class GraphPane extends JPanel {
 		paintXAxis(g2d, labelInsets);
 		paintYAxis(g2d, labelInsets);
 		if (data != null) {
+			//ppg2d.clip(graphArea);
 		    paintData(g2d);
 		}
 		paintWaitDurationRule(g2d);
@@ -253,6 +254,8 @@ public class GraphPane extends JPanel {
 	Stroke defaultStroke = g.getStroke();
 	g.setStroke(dataStroke);
 
+
+		int maxX = (int) graphArea.getMaxX();
 	Point previousPoint = null;
 		int sampleIdx = 0;
 		double coeff = graphArea.width / (5.0 * data.samplingFrequency * data.xAxisSenivity.getMicrosecondsPerDiv() * 1E-6);
@@ -262,6 +265,9 @@ public class GraphPane extends JPanel {
 	    if (previousPoint != null) {
 		g.drawLine(previousPoint.x, previousPoint.y, point.x, point.y);
 	    }
+			if (point.x >= maxX) {
+				break;
+			}
 	    previousPoint = point;
 	}
 	g.setStroke(defaultStroke);

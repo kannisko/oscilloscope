@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 public class Panel {
     private JPanel panel;
     private JComboBox portComboBox;
+    public JComboBox horizontalSens;
 
     private Scope scope;
 
