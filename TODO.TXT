@@ -8,6 +8,10 @@ UI
 -zapis ramek do pliku
 -podgląd ramek z pliku - osobny device
 
+arUI
+connect, set params <- futures
+wykombinować flow z triggerem
+flow z sweep (może jeb\no ustawienie horizontala  na razie, jak sie po,epszy to wiecej??)
 arduino
 - init z comba bez zwiechy
 - zbieranie i akwizycja danych , na razie na rympał (freq, i trigger)

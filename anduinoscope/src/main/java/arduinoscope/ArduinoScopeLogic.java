@@ -41,7 +41,7 @@ public class ArduinoScopeLogic {
         this.selectedHoriz = selectedHoriz;
     }
 
-    public EnumeratedPort[] getEnumeratedPorts() {
+    public static EnumeratedPort[] getEnumeratedPorts() {
         List<CommPortIdentifier> ports = Serial.enumeratePorts();
 
         EnumeratedPort result[] = new EnumeratedPort[ports.size() + 1];
