@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.*;
 
 public class GuiPanel implements IOsciloscope {
     private JPanel panel;
@@ -28,8 +29,9 @@ public class GuiPanel implements IOsciloscope {
     private String userSettingPrefix;
     private Properties userSettings;
 
-
+    ExecutorService service = Executors.newFixedThreadPool(10);
     public GuiPanel() {
+
         this.arduinoScopeLogic = new ArduinoScopeLogic();
 
     }
@@ -61,6 +63,37 @@ public class GuiPanel implements IOsciloscope {
         this.userSettingPrefix = userSettingPrefix;
         this.userSettings = userSettings;
 
+        portComboBox.setModel(new DefaultComboBoxModel(ArduinoScopeLogic.getEnumeratedPorts()));
+        portComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                Object o = portComboBox.getSelectedItem();
+                RunnableFuture<Boolean> connect = new FutureTask<Boolean>(new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        return arduinoScopeLogic.connect((ArduinoScopeLogic.EnumeratedPort) o);
+                    }
+                });
+                service.submit(connect);
+                boolean isOk = false;
+                try {
+                    isOk = connect.get(1500, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                }
+                if (!isOk) {
+                    JOptionPane.showMessageDialog(null, "My Goodness, this is so concise");
+//                    portComboBox.setSelectedIndex(0);
+                }
+
+            }
+        });
+
+
         new ComboWithProps<>(horizontalSens
                 , ArduinoScopeLogic.HorizSensWithSampleRate.values()
                 , ArduinoScopeLogic.HorizSensWithSampleRate.h_20ms
@@ -72,23 +105,6 @@ public class GuiPanel implements IOsciloscope {
                 });
     }
 
-
-    public void setArduinoScopeLogic(ArduinoScopeLogic arduinoScopeLogic) {
-        this.arduinoScopeLogic = arduinoScopeLogic;
-        portComboBox.setModel(new DefaultComboBoxModel(arduinoScopeLogic.getEnumeratedPorts()));
-        portComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                Object o = portComboBox.getSelectedItem();
-                try {
-                    arduinoScopeLogic.connect((ArduinoScopeLogic.EnumeratedPort) o);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        });
-    }
 
     private void createUIComponents() {
         // TODO: place custom component creation code here

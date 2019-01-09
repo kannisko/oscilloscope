@@ -24,7 +24,7 @@ public class ArduinoScopeLogic {
     private static final String CMD_SET_TRIGGER_TYPE = "#stt";
     private static final String CMD_SET_TRIGGER_VALUE = "#stv";
     private static final String CMD_SET_TRIGGER_SLOPE = "#sts";
-    private Serial serialPort;
+    private Serial serialPort = new Serial();
 
     public ArduinoScopeLogic() {
 
@@ -55,25 +55,23 @@ public class ArduinoScopeLogic {
     }
 
     public boolean connect(EnumeratedPort enumeratedPort) throws InterruptedException {
-        Thread.sleep(1000);
+        try {
+            disconnect();
+            Thread.sleep(5000);
+            if (enumeratedPort.getPort() != null) {
+                serialPort.connect(enumeratedPort.getPort());
+                return initDevice();
+            }
+            return true;
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return false;
-//        try {
-//            disconnect();
-//            if (enumeratedPort.getPort() != null) {
-//                connect(enumeratedPort.getPort());
-//                return initDevice();
-//            }
-//            return true;
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return false;
 
     }
 
