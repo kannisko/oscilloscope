@@ -2,6 +2,8 @@ package arduinoscope;
 
 import dso.*;
 import dso.guihelper.ComboWithProps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -11,6 +13,7 @@ import java.util.Properties;
 import java.util.concurrent.*;
 
 public class GuiPanel implements IOsciloscope {
+    protected static final Logger logger = LoggerFactory.getLogger(GuiPanel.class.getName());
     private JPanel panel;
     private JComboBox portComboBox;
     public JComboBox horizontalSens;
@@ -29,7 +32,7 @@ public class GuiPanel implements IOsciloscope {
     private String userSettingPrefix;
     private Properties userSettings;
 
-    ExecutorService service = Executors.newFixedThreadPool(10);
+
     public GuiPanel() {
 
         this.arduinoScopeLogic = new ArduinoScopeLogic();
@@ -74,20 +77,17 @@ public class GuiPanel implements IOsciloscope {
                         return arduinoScopeLogic.connect((ArduinoScopeLogic.EnumeratedPort) o);
                     }
                 });
-                service.submit(connect);
+                dsoGuiListener.getExecutorService().submit(connect);
                 boolean isOk = false;
                 try {
                     isOk = connect.get(1500, TimeUnit.MILLISECONDS);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (ExecutionException e) {
-                    e.printStackTrace();
-                } catch (TimeoutException e) {
-                    e.printStackTrace();
+                } catch (ExecutionException | InterruptedException | TimeoutException e) {
+                    logger.error(e.toString());
+                    connect.cancel(true);
                 }
                 if (!isOk) {
                     JOptionPane.showMessageDialog(null, "My Goodness, this is so concise");
-//                    portComboBox.setSelectedIndex(0);
+                    portComboBox.setSelectedIndex(0);
                 }
 
             }

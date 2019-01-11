@@ -4,14 +4,15 @@ import dso.AquisitionFrame;
 import dso.XAxisSensivity;
 import gnu.io.CommPortIdentifier;
 import nati.Serial;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Logger;
 
 
 public class ArduinoScopeLogic {
-    private static final Logger logger = Logger.getLogger(ArduinoScopeLogic.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ArduinoScopeLogic.class.getName());
 
     private static final int DATA_BUFFER_SIZE = 1280;
     private static final String ARDUSCOPE_VERSION = "#version 1.0";
@@ -54,36 +55,39 @@ public class ArduinoScopeLogic {
         return result;
     }
 
-    public boolean connect(EnumeratedPort enumeratedPort) throws InterruptedException {
+    public boolean connect(EnumeratedPort enumeratedPort) {
         try {
             disconnect();
-            Thread.sleep(5000);
             if (enumeratedPort.getPort() != null) {
+                serialPort = new Serial();
                 serialPort.connect(enumeratedPort.getPort());
                 return initDevice();
             }
+            logger.info("connected");
             return true;
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e.toString());
         }
         return false;
 
     }
 
-    public boolean initDevice() throws IOException, InterruptedException {
-        for( int i=0; i<RETRY_CNT; i++) {
-            serialPort.writeLine(CMD_ACTION_RESET);
-            Thread.sleep(100);
-            serialPort.writeLine(CMD_GET_VERSION);
-            String response = serialPort.readLine();
-            if( response.startsWith(ARDUSCOPE_VERSION)){
-                return true;
+    public boolean initDevice() {
+        logger.info("initializing device");
+        try {
+            for (int i = 0; i < RETRY_CNT; i++) {
+                serialPort.writeLine(CMD_ACTION_RESET);
+                Thread.sleep(100);
+                serialPort.writeLine(CMD_GET_VERSION);
+                String response = serialPort.readLine();
+                if (response.startsWith(ARDUSCOPE_VERSION)) {
+                    logger.info("initialized");
+                    return true;
+                }
             }
+        } catch (Exception e) {
+            logger.error(e.toString());
         }
         return false;
     }
@@ -114,7 +118,7 @@ public class ArduinoScopeLogic {
         serialPort.writeLine(CMD_SET_SPEED + " " + divisor);
         String res = serialPort.readLine();
         lastSettedSpeed = divisor;
-        logger.warning("setSpeed:" + res);
+        logger.warn("setSpeed:" + res);
     }
 
     void updateParams() throws IOException {
@@ -126,6 +130,7 @@ public class ArduinoScopeLogic {
 
 
     public void disconnect() throws IOException {
+        logger.debug("disconnecting");
         serialPort.close();
     }
 

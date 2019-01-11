@@ -2,6 +2,8 @@ package nati;
 
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -10,8 +12,6 @@ import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 /**
  * Reading operations are semi-interruptible here. As long as nothing as been
@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  */
 public class Serial implements Closeable {
 
-    protected static final Logger logger = Logger.getLogger(Serial.class.getName());
+    protected static final Logger logger = LoggerFactory.getLogger(Serial.class.getName());
 
     static {
         Native.setLibraryPath();
@@ -77,10 +77,10 @@ public class Serial implements Closeable {
     }
 
     public void connect(CommPortIdentifier portId) throws Exception {
+        logger.info("connecting {}", portId.getName());
         serialPort = (SerialPort) portId.open(getClass().getName(), TIME_OUT);
 
         serialPort.setSerialPortParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-        //serialPort.setFlowControlMode(SerialPort.FLOWCONTROL_RTSCTS_IN | SerialPort.FLOWCONTROL_RTSCTS_OUT);
 
         output = serialPort.getOutputStream();
         input = serialPort.getInputStream();
@@ -131,10 +131,10 @@ public class Serial implements Closeable {
                 }
             }
         } catch (InterruptedException e) {
-            logger.log(Level.FINE, "Read aborted");
+            logger.debug("Read aborted");
             return null;
         }
-        logger.log(Level.WARNING, "< ({0})", line);
+        logger.debug("< ({})", line);
         return line.toString();
     }
 
@@ -157,10 +157,10 @@ public class Serial implements Closeable {
                 }
             }
         } catch (InterruptedException e) {
-            logger.log(Level.FINE, "Read aborted");
+            logger.debug("Read aborted");
             return -1;
         }
-        logger.log(Level.FINE, "< {0} byte(s)", offset);
+        logger.debug("< {} byte(s)", offset);
         return offset;
     }
 
@@ -173,7 +173,7 @@ public class Serial implements Closeable {
         }
         output.write('\n');
         output.flush();
-        logger.log(Level.FINE, "> ({0})", line);
+        logger.debug("> ({})", line);
     }
 
 
@@ -182,7 +182,7 @@ public class Serial implements Closeable {
             try {
                 output.flush();
             } catch (IOException e) {
-                logger.log(Level.WARNING, "When flushing output before closing serial.", e);
+                logger.error("When flushing output before closing serial.", e);
             }
             serialPort.close();
             serialPort = null;

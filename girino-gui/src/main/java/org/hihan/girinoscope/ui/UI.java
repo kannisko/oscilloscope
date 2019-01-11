@@ -107,7 +107,8 @@ public class UI extends JFrame implements IDsoGuiListener{
 
     private DataAcquisitionTask currentDataAcquisitionTask;
 
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private ExecutorService executorService = Executors.newFixedThreadPool(5);
+
 
     @Override
     public void setYAxis(YAxisSensivity yAxisSensivity, YAxisPolarity yAxisPolarity) {
@@ -206,6 +207,11 @@ public class UI extends JFrame implements IDsoGuiListener{
         graphPane.setXCoordinateSystem(xAxisBuilder.build());
     }
 
+    @Override
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
+
     private final Action stopAcquiringAction = new AbstractAction("Stop acquiring", Icon.get("media-playback-stop.png")) {
         {
             putValue(Action.SHORT_DESCRIPTION, "Stop acquiring data from Girino.");
@@ -255,14 +261,15 @@ public class UI extends JFrame implements IDsoGuiListener{
             if (currentDataAcquisitionTask != null) {
                 currentDataAcquisitionTask.cancel(true);
             }
-            executor.shutdownNow();
-            try {
-                executor.awaitTermination(2, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                logger.log(Level.WARNING, "Serial line not responding.", e);
-            }
             if (girino != null) {
                 girino.disconnect();
+                girino = null;
+            }
+            executorService.shutdownNow();
+            try {
+                executorService.awaitTermination(2, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                logger.log(Level.WARNING, "Serial line not responding.", e);
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "When disconnecting from Girino.", e);
@@ -562,7 +569,7 @@ public class UI extends JFrame implements IDsoGuiListener{
 
             setStatus("blue", "Contacting Girino on %s...", "frozen");//frozenPortId.getName());
 
-            Future<Void> connection = executor.submit(new Callable<Void>() {
+            Future<Void> connection = executorService.submit(new Callable<Void>() {
 
                 @Override
                 public Void call() throws Exception {
@@ -602,7 +609,7 @@ public class UI extends JFrame implements IDsoGuiListener{
                 } else {
                     try {
                         if (acquisition == null) {
-                            acquisition = executor.submit(new Callable<AquisitionFrame>() {
+                            acquisition = executorService.submit(new Callable<AquisitionFrame>() {
 
                                 @Override
                                 public AquisitionFrame call() throws Exception {

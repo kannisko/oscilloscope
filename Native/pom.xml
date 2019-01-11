@@ -19,6 +19,11 @@
                 <scope>system</scope>
                 <systemPath>${basedir}/../lib/RXTXcomm.jar</systemPath>
             </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.8.0-beta2</version>
+        </dependency>
     </dependencies>
 
 
