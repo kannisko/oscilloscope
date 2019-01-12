@@ -113,26 +113,39 @@ public class Serial implements Closeable {
         int length = 0;
         try {
             while (true) {
-                int c;
-                if ((input.available() > 0 || line.length() > 0) && (c = input.read()) >= 0) {
-                    line.append((char) c);
-                    ++length;
-                    boolean eol = length >= 2  && line.charAt(length - 1) == '\n';
-                    if (eol) {
-                        line.setLength(length - 1);
+                int c = input.read();
+                logger.debug("read int:{}", c);
+                if (c >= 0) {
+                    logger.debug("read byte:{}", (char) c);
+                    if (c == '\n') {
                         break;
                     }
+
+                    line.append((char) c);
+
                 } else {
-                    /*
-                     * Sleeping here allows us to be interrupted (the serial
-                     * input is not interruptible itself).
-                     */
-                    Thread.sleep(READ_DELAY);
+                    Thread.sleep(200);
                 }
+
+//                if ((input.available() > 0 || line.length() > 0) && (c = input.read()) >= 0) {
+//                    line.append((char) c);
+//                    ++length;
+//                    boolean eol = length >= 2  && line.charAt(length - 1) == '\n';
+//                    if (eol) {
+//                        line.setLength(length - 1);
+//                        break;
+//                    }
+//                } else {
+//                    /*
+//                     * Sleeping here allows us to be interrupted (the serial
+//                     * input is not interruptible itself).
+//                     */
+//                    Thread.sleep(READ_DELAY);
+//                }
             }
         } catch (InterruptedException e) {
             logger.debug("Read aborted");
-            return null;
+            return "";
         }
         logger.debug("< ({})", line);
         return line.toString();
@@ -181,6 +194,12 @@ public class Serial implements Closeable {
         if (serialPort != null) {
             try {
                 output.flush();
+                output.close();
+            } catch (IOException e) {
+                logger.error("When flushing output before closing serial.", e);
+            }
+            try {
+                input.close();
             } catch (IOException e) {
                 logger.error("When flushing output before closing serial.", e);
             }

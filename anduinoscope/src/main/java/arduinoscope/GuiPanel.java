@@ -46,6 +46,7 @@ public class GuiPanel implements IOsciloscope {
 
     @Override
     public void disconnect() throws IOException {
+        arduinoScopeLogic.disconnect();
 
     }
 

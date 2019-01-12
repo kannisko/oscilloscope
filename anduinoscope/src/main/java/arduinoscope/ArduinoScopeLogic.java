@@ -92,20 +92,6 @@ public class ArduinoScopeLogic {
         return false;
     }
 
-//    public static void main(String args[]) throws Exception {
-//        List<CommPortIdentifier> ports = Serial.enumeratePorts();
-//        if (ports.size() <= 0) {
-//            return;
-//        }
-//        CommPortIdentifier port = ports.get(0);
-//        ArduinoScopeLogic arduinoScopeLogic = new ArduinoScopeLogic();
-//        arduinoScopeLogic.connect(port);
-//        boolean init = arduinoScopeLogic.initDevice();
-//        logger.warning("init :" + (init ? "OK" : "NOT OK"));
-//        arduinoScopeLogic.setSpeed(5);
-//
-//        arduinoScopeLogic.close();
-//    }
 
     public byte[] getData() throws IOException {
         serialPort.writeLine(CMD_ACTION_ACQUIRE_DATA);
@@ -203,6 +189,21 @@ public class ArduinoScopeLogic {
         public String toString() {
             return xAxisSensivity.toString();
         }
+    }
+
+    public static void main(String args[]) throws Exception {
+        EnumeratedPort ports[] = getEnumeratedPorts();
+        if (ports.length <= 1) {
+            return;
+        }
+        EnumeratedPort port = ports[1];
+        ArduinoScopeLogic arduinoScopeLogic = new ArduinoScopeLogic();
+        arduinoScopeLogic.connect(port);
+        arduinoScopeLogic.connect(port);
+        arduinoScopeLogic.connect(port);
+        arduinoScopeLogic.connect(port);
+        arduinoScopeLogic.connect(port);
+        arduinoScopeLogic.connect(port);
     }
 
 }
