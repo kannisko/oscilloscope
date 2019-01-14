@@ -2,6 +2,7 @@ package arduinoscope;
 
 import dso.*;
 import dso.guihelper.ComboWithProps;
+import dso.guihelper.GroupRadioWithProps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,7 @@ public class GuiPanel implements IOsciloscope {
     private JRadioButton triggerModeNormal;
     private JRadioButton trModeSingle;
     private JRadioButton trModeSweep;
+    private GroupRadioWithProps<SlopeEdge> slopeEdge;
     private JRadioButton slopeRise;
     private JRadioButton slopeFall;
     private JSlider triggerLevel;
@@ -104,6 +106,15 @@ public class GuiPanel implements IOsciloscope {
                     arduinoScopeLogic.setSelectedHoriz(o);
                     this.dsoGuiListener.setXAxis(o.xAxisSensivity);
                 });
+
+        slopeEdge = new GroupRadioWithProps<SlopeEdge>(
+                new JRadioButton[]{slopeRise, slopeFall}
+                , new SlopeEdge[]{SlopeEdge.RISE, SlopeEdge.FALL}
+                , SlopeEdge.RISE
+                , this.userSettings
+                , this.userSettingPrefix + ".slope"
+                , null);
+
     }
 
 

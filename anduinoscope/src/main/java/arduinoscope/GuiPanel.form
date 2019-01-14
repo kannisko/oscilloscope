@@ -153,10 +153,12 @@
             <children>
               <component id="d0564" class="javax.swing.JSlider" binding="triggerLevel">
                 <constraints>
-                  <grid row="1" column="0" row-span="2" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="1" column="0" row-span="2" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="1" use-parent-layout="false"/>
                 </constraints>
                 <properties>
+                  <maximum value="255"/>
                   <orientation value="1"/>
+                  <value value="127"/>
                 </properties>
               </component>
               <hspacer id="d4da9">
