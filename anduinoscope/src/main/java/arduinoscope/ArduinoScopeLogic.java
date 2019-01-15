@@ -1,6 +1,7 @@
 package arduinoscope;
 
 import dso.AquisitionFrame;
+import dso.SlopeEdge;
 import dso.XAxisSensivity;
 import gnu.io.CommPortIdentifier;
 import nati.Serial;
@@ -33,6 +34,9 @@ public class ArduinoScopeLogic {
 
     HorizSensWithSampleRate selectedHoriz;
     int lastSettedSpeed = -1;
+
+    private SlopeEdge slopeEdge = SlopeEdge.FALL;
+    private int triggerLevel = 120;
 
 
 
@@ -106,6 +110,20 @@ public class ArduinoScopeLogic {
         lastSettedSpeed = divisor;
         logger.warn("setSpeed:" + res);
     }
+
+    public void setSlopeEdge(SlopeEdge edge) {
+        this.slopeEdge = edge;
+    }
+
+    public void setTriggerLevel(int level) {
+        if (level <= 0) {
+            level = 0;
+        } else if (level > 255) {
+            level = 255;
+        }
+        this.triggerLevel = level;
+    }
+
 
     void updateParams() throws IOException {
         if (lastSettedSpeed != selectedHoriz.divisor) {

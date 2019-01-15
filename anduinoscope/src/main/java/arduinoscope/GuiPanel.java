@@ -3,6 +3,7 @@ package arduinoscope;
 import dso.*;
 import dso.guihelper.ComboWithProps;
 import dso.guihelper.GroupRadioWithProps;
+import dso.guihelper.SliderWithProps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +29,14 @@ public class GuiPanel implements IOsciloscope {
     private JRadioButton slopeFall;
     private JSlider triggerLevel;
     private JButton startButton;
+    private static final String BUTTON_START = "Start";
 
     private ArduinoScopeLogic arduinoScopeLogic;
     private IDsoGuiListener dsoGuiListener;
     private String userSettingPrefix;
     private Properties userSettings;
-
+    private static final String BUTTON_STOP = "Stop";
+    private boolean startFired = false;
 
     public GuiPanel() {
 
@@ -113,7 +116,52 @@ public class GuiPanel implements IOsciloscope {
                 , SlopeEdge.RISE
                 , this.userSettings
                 , this.userSettingPrefix + ".slope"
-                , null);
+                , edge -> arduinoScopeLogic.setSlopeEdge(edge));
+
+        new SliderWithProps(triggerLevel
+                , 0, 255, 127
+                , this.userSettings
+                , this.userSettingPrefix + ".trigLvl"
+                , value -> {
+            arduinoScopeLogic.setTriggerLevel(value);
+        });
+
+        triggerModeOff.addActionListener(action -> {
+            logger.debug("triggerModeOff action");
+            stopGettingData();
+            startButton.setEnabled(false);
+            startButton.setText(BUTTON_START);
+        });
+
+        trModeSingle.addActionListener(actionEvent -> {
+            logger.debug("trModeSingle action");
+            stopGettingData();
+            startButton.setEnabled(true);
+            startButton.setText(BUTTON_START);
+        });
+
+        startButton.addActionListener(actionEvent -> {
+            if (startFired) {
+                logger.debug("startButton stopping action");
+                stopGettingData();
+                startFired = false;
+                startButton.setText(BUTTON_START);
+
+            } else {
+                logger.debug("startButton starting action");
+                startFired = true;
+                startButton.setText(BUTTON_STOP);
+            }
+        });
+
+//        private JRadioButton triggerModeAuto;
+//        private JRadioButton triggerModeNormal;
+//        private JRadioButton
+
+
+    }
+
+    private void stopGettingData() {
 
     }
 
