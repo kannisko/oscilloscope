@@ -7,4 +7,13 @@ public class AquisitionFrame {
     //per channel
     public XAxisSensivity xAxisSenivity;
     public byte data[];
+
+    public AquisitionFrame() {
+    }
+
+    public AquisitionFrame(int samplingFrequency, XAxisSensivity xAxisSenivity, byte[] data) {
+        this.samplingFrequency = samplingFrequency;
+        this.xAxisSenivity = xAxisSenivity;
+        this.data = data;
+    }
 }

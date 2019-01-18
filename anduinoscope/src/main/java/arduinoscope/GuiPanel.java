@@ -37,6 +37,8 @@ public class GuiPanel implements IOsciloscope {
     private Properties userSettings;
     private static final String BUTTON_STOP = "Stop";
     private boolean startFired = false;
+    private FutureTask<Boolean> getDataJob = null;
+
 
     public GuiPanel() {
 
@@ -151,6 +153,8 @@ public class GuiPanel implements IOsciloscope {
                 logger.debug("startButton starting action");
                 startFired = true;
                 startButton.setText(BUTTON_STOP);
+                getDataJob = new FutureTask(() -> arduinoScopeLogic.acquireData(res -> callback(res)), true);
+                dsoGuiListener.getExecutorService().submit(getDataJob);
             }
         });
 
@@ -161,8 +165,18 @@ public class GuiPanel implements IOsciloscope {
 
     }
 
-    private void stopGettingData() {
+    private void callback(AckDataResult res) {
+        logger.debug("callback");
+        getDataJob = null;
+        startFired = false;
+        startButton.setText(BUTTON_START);
+    }
 
+    private void stopGettingData() {
+        if (getDataJob != null) {
+            logger.debug("stopGettingData ");
+            getDataJob.cancel(true);
+        }
     }
 
 

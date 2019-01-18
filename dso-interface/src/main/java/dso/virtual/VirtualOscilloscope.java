@@ -147,11 +147,10 @@ public class VirtualOscilloscope extends PropOsciloscope {
 
     public AquisitionFrame acquireData() throws Exception {
         Thread.sleep(100);
-        AquisitionFrame result = new AquisitionFrame();
-        result.samplingFrequency = samplingRate.getValue().getSamplingRate();
-        result.xAxisSenivity = (XAxisSensivity) horizSensChan1.getSelectedItem();
-
-        result.data = new byte[2000];
+        AquisitionFrame result = new AquisitionFrame(
+                samplingRate.getValue().getSamplingRate(),
+                (XAxisSensivity) horizSensChan1.getSelectedItem(),
+                new byte[2000]);
 
         calcSin(result.data);
         return result;

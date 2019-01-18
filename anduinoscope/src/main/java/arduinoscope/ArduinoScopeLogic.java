@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 
 public class ArduinoScopeLogic {
@@ -139,17 +140,20 @@ public class ArduinoScopeLogic {
     }
 
 
-    public AquisitionFrame acquireData() throws Exception {
-        updateParams();
-        byte buffer[] = getData();
-        if (buffer == null) {
-            return null;
+    public void acquireData(Consumer<AckDataResult> callback) {
+        //AquisitionFrame
+        try {
+            updateParams();
+            Thread.sleep(5000);
+            byte buffer[] = getData();
+            logger.debug("acquireData OK");
+            callback.accept(AckDataResult.OK(new AquisitionFrame(selectedHoriz.sampleRate, selectedHoriz.xAxisSensivity, buffer)));
+
+        } catch (Exception ex) {
+            logger.debug("acquireData ERR ", ex);
+            callback.accept(AckDataResult.ERROR(ex));
+
         }
-        AquisitionFrame frame = new AquisitionFrame();
-        frame.samplingFrequency = selectedHoriz.sampleRate;
-        frame.xAxisSenivity = selectedHoriz.xAxisSensivity;
-        frame.data = buffer;
-        return frame;
     }
 
 
