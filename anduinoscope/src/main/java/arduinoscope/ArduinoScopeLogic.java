@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 
@@ -98,10 +99,10 @@ public class ArduinoScopeLogic {
     }
 
 
-    public byte[] getData() throws IOException {
+    public byte[] getData(BooleanSupplier cancel) throws IOException {
         serialPort.writeLine(CMD_ACTION_ACQUIRE_DATA);
         byte result[] = new byte[DATA_BUFFER_SIZE];
-        serialPort.readBytes(result);
+        serialPort.readBytes(result, cancel);
         return result;
     }
 
@@ -140,12 +141,12 @@ public class ArduinoScopeLogic {
     }
 
 
-    public void acquireData(Consumer<AckDataResult> callback) {
+    public void acquireData(BooleanSupplier cancel, Consumer<AckDataResult> callback) {
         //AquisitionFrame
         try {
             updateParams();
             Thread.sleep(5000);
-            byte buffer[] = getData();
+            byte buffer[] = getData(cancel);
             logger.debug("acquireData OK");
             callback.accept(AckDataResult.OK(new AquisitionFrame(selectedHoriz.sampleRate, selectedHoriz.xAxisSensivity, buffer)));
 

@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.regex.Pattern;
 /**
  * Reading operations are semi-interruptible here. As long as nothing as been
@@ -55,7 +56,7 @@ public class Serial implements Closeable {
     private static final int DATA_RATE = 115200;
 
     /** Milliseconds to wait when no input is available. */
-    private static final int READ_DELAY = 200;
+    private static final int READ_DELAY = 50;
 
     protected SerialPort serialPort;
 
@@ -151,7 +152,7 @@ public class Serial implements Closeable {
         return line.toString();
     }
 
-    public int readBytes(byte[] buffer) throws IOException {
+    public int readBytes(byte[] buffer, BooleanSupplier cancel) throws IOException {
         int offset = 0;
         try {
             while (offset < buffer.length) {
