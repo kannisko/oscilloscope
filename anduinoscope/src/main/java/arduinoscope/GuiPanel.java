@@ -153,7 +153,7 @@ public class GuiPanel implements IOsciloscope {
                 logger.debug("startButton starting action");
                 startFired = true;
                 startButton.setText(BUTTON_STOP);
-                getDataJob = new FutureTask(() -> arduinoScopeLogic.acquireData(res -> callback(res)), true);
+                getDataJob = new FutureTask(() -> arduinoScopeLogic.acquireData(()->false,res -> callback(res)), true);
                 dsoGuiListener.getExecutorService().submit(getDataJob);
             }
         });
