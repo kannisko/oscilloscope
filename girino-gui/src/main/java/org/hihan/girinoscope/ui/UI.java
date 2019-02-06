@@ -111,6 +111,11 @@ public class UI extends JFrame implements IDsoGuiListener{
 
 
     @Override
+    public void setData(AquisitionFrame aquisitionFrame) {
+        graphPane.setData(aquisitionFrame);
+    }
+
+    @Override
     public void setYAxis(YAxisSensivity yAxisSensivity, YAxisPolarity yAxisPolarity) {
         int div = yAxisSensivity.getMilivoltsPerDiv();
         int max = 5 * div;

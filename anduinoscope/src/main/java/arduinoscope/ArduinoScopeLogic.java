@@ -128,9 +128,9 @@ public class ArduinoScopeLogic {
 
 
     void updateParams() throws IOException {
-        if (lastSettedSpeed != selectedHoriz.divisor) {
+//      if (lastSettedSpeed != selectedHoriz.divisor) {
             setSpeed(selectedHoriz.divisor);
-        }
+//      }
 
     }
 
@@ -145,7 +145,6 @@ public class ArduinoScopeLogic {
         //AquisitionFrame
         try {
             updateParams();
-            Thread.sleep(5000);
             byte buffer[] = getData(cancel);
             logger.debug("acquireData OK");
             callback.accept(AckDataResult.OK(new AquisitionFrame(selectedHoriz.sampleRate, selectedHoriz.xAxisSensivity, buffer)));

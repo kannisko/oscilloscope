@@ -170,6 +170,9 @@ public class GuiPanel implements IOsciloscope {
         getDataJob = null;
         startFired = false;
         startButton.setText(BUTTON_START);
+        if( res.isOk() ){
+            this.dsoGuiListener.setData(res.getAquisitionFrame());
+        }
     }
 
     private void stopGettingData() {
