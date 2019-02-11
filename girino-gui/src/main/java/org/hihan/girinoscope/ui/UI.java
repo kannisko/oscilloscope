@@ -64,7 +64,7 @@ public class UI extends JFrame implements IDsoGuiListener{
         });
 
 //        graphPane = new GraphPane(parameters.get(Parameter.THRESHOLD), parameters.get(Parameter.WAIT_DURATION));
-        graphPane = new GraphPane(1, 100);
+        graphPane = new GraphPane(this,1, 100);
 
         graphPane.setYCoordinateSystem(yAxisBuilder.build());
         graphPane.setXCoordinateSystem(xAxisBuilder.build());
@@ -122,6 +122,28 @@ public class UI extends JFrame implements IDsoGuiListener{
         int min = yAxisPolarity == YAxisPolarity.DC ? 0 : -max;
         yAxisBuilder.setStartValue(min).setEndValue(max).setIncrement(div);
         graphPane.setYCoordinateSystem(yAxisBuilder.build());
+    }
+
+    @Override
+    public void setXAxis(XAxisSensivity xAxisSensivity) {
+        int div = xAxisSensivity.getUnitValue();
+        int max = NHorizDivs * div;
+        xAxisBuilder.setStartValue(0).setEndValue(max).setIncrement(div);
+        xAxisBuilder.setFormat("###" + xAxisSensivity.getUnit());
+        graphPane.setXCoordinateSystem(xAxisBuilder.build());
+    }
+
+    @Override
+    public void setThreshold(int threshold) {
+        if(girino != null){
+            girino.setThreshold(threshold);
+        }
+
+    }
+
+    @Override
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 
     private static IOsciloscopeFactory[] getOscList() {
@@ -203,19 +225,6 @@ public class UI extends JFrame implements IDsoGuiListener{
         });
     }
 
-    @Override
-    public void setXAxis(XAxisSensivity xAxisSensivity) {
-        int div = xAxisSensivity.getUnitValue();
-        int max = NHorizDivs * div;
-        xAxisBuilder.setStartValue(0).setEndValue(max).setIncrement(div);
-        xAxisBuilder.setFormat("###" + xAxisSensivity.getUnit());
-        graphPane.setXCoordinateSystem(xAxisBuilder.build());
-    }
-
-    @Override
-    public ExecutorService getExecutorService() {
-        return executorService;
-    }
 
     private final Action stopAcquiringAction = new AbstractAction("Stop acquiring", Icon.get("media-playback-stop.png")) {
         {

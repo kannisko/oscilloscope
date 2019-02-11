@@ -27,7 +27,6 @@ public class GuiPanel implements IOsciloscope {
     private GroupRadioWithProps<SlopeEdge> slopeEdge;
     private JRadioButton slopeRise;
     private JRadioButton slopeFall;
-    private JSlider triggerLevel;
     private JButton startButton;
     private static final String BUTTON_START = "Start";
 
@@ -62,6 +61,11 @@ public class GuiPanel implements IOsciloscope {
         this.dsoGuiListener = listener;
         this.dsoGuiListener.setYAxis(YAxisSensivity.S_1V, YAxisPolarity.DC);
 
+    }
+
+    @Override
+    public void setThreshold(int threshold) {
+        arduinoScopeLogic.setTriggerLevel(threshold);
     }
 
     @Override
@@ -120,16 +124,20 @@ public class GuiPanel implements IOsciloscope {
                 , this.userSettingPrefix + ".slope"
                 , edge -> arduinoScopeLogic.setSlopeEdge(edge));
 
-        new SliderWithProps(triggerLevel
-                , 0, 255, 127
-                , this.userSettings
-                , this.userSettingPrefix + ".trigLvl"
-                , value -> {
-            arduinoScopeLogic.setTriggerLevel(value);
-        });
-
         triggerModeOff.addActionListener(action -> {
             logger.debug("triggerModeOff action");
+            stopGettingData();
+            startButton.setEnabled(false);
+            startButton.setText(BUTTON_START);
+        });
+        triggerModeAuto.addActionListener(action -> {
+            logger.debug("triggerModeAuto action");
+            stopGettingData();
+            startButton.setEnabled(false);
+            startButton.setText(BUTTON_START);
+        });
+        triggerModeNormal.addActionListener(action -> {
+            logger.debug("triggerModeNormal action");
             stopGettingData();
             startButton.setEnabled(false);
             startButton.setText(BUTTON_START);
@@ -139,6 +147,12 @@ public class GuiPanel implements IOsciloscope {
             logger.debug("trModeSingle action");
             stopGettingData();
             startButton.setEnabled(true);
+            startButton.setText(BUTTON_START);
+        });
+        trModeSweep.addActionListener(action -> {
+            logger.debug("triggerModeSweep action");
+            stopGettingData();
+            startButton.setEnabled(false);
             startButton.setText(BUTTON_START);
         });
 

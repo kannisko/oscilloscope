@@ -145,6 +145,11 @@ public class VirtualOscilloscope extends PropOsciloscope {
         this.guiListener = listener;
     }
 
+    @Override
+    public void setThreshold(int threshold) {
+
+    }
+
     public AquisitionFrame acquireData() throws Exception {
         Thread.sleep(100);
         AquisitionFrame result = new AquisitionFrame(

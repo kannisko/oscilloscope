@@ -81,6 +81,11 @@ public class Osciloscope2100Parallel extends Osciloscope2100 {
 
     }
 
+    @Override
+    public void setThreshold(int threshold) {
+
+    }
+
     public JPanel getPanel() {
         return null;
     }

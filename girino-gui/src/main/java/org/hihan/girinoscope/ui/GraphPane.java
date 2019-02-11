@@ -1,6 +1,7 @@
 package org.hihan.girinoscope.ui;
 
 import dso.AquisitionFrame;
+import dso.IDsoGuiListener;
 import org.hihan.girinoscope.ui.Axis.GraphLabel;
 
 import javax.swing.*;
@@ -51,14 +52,17 @@ public class GraphPane extends JPanel {
 
     private int waitDuration;
 
+	private IDsoGuiListener listener;
+
     private enum Rule {
 	THRESHOLD_RULE, WAIT_DURATION_RULE
     }
 
     private Rule grabbedRule;
 
-    public GraphPane(int initialThreshold, int initialWaitDuration) {
-	threshold = initialThreshold;
+    public GraphPane(IDsoGuiListener listener,int initialThreshold, int initialWaitDuration) {
+    	this.listener = listener;
+	setThreshold(initialThreshold);
 	waitDuration = initialWaitDuration;
 	addMouseMotionListener(new MouseMotionListener() {
 
@@ -105,8 +109,7 @@ public class GraphPane extends JPanel {
 		    switch (grabbedRule) {
 
 		    case THRESHOLD_RULE:
-			int newThreshold = uv.y;
-			GraphPane.this.threshold = Math.max(0, Math.min(newThreshold, V_MAX));
+		    	setThreshold(uv.y);
 			break;
 
 		    case WAIT_DURATION_RULE:
@@ -155,6 +158,11 @@ public class GraphPane extends JPanel {
     public int getThreshold() {
 	return threshold;
     }
+
+    public void setThreshold(int threshold){
+		this.threshold = Math.max(0, Math.min(threshold, V_MAX));
+		listener.setThreshold(this.threshold);
+	}
 
     public int getWaitDuration() {
 	return waitDuration;

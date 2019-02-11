@@ -106,12 +106,28 @@ public class ArduinoScopeLogic {
         return result;
     }
 
-    private void setSpeed(int divisor) throws IOException {
+    private void cmdSetSpeed(int divisor) throws IOException {
         serialPort.writeLine(CMD_SET_SPEED + " " + divisor);
         String res = serialPort.readLine();
         lastSettedSpeed = divisor;
-        logger.warn("setSpeed:" + res);
+        logger.warn("cmdSetSpeed:" + res);
     }
+
+    private void cmdSetTriggerLevel() throws IOException {
+        serialPort.writeLine(CMD_SET_TRIGGER_VALUE + " " + this.triggerLevel);
+        String res = serialPort.readLine();
+        logger.warn("cmdSetTriggerLevel:" + res);
+
+    }
+
+    private void cmdSetTriggerSlope() throws IOException {
+        serialPort.writeLine(CMD_SET_TRIGGER_SLOPE + " " + this.slopeEdge.getCommand());
+        String res = serialPort.readLine();
+        logger.warn("cmdSetTriggerSlope:" + res);
+    }
+
+
+
 
     public void setSlopeEdge(SlopeEdge edge) {
         this.slopeEdge = edge;
@@ -129,8 +145,10 @@ public class ArduinoScopeLogic {
 
     void updateParams() throws IOException {
 //      if (lastSettedSpeed != selectedHoriz.divisor) {
-            setSpeed(selectedHoriz.divisor);
+            cmdSetSpeed(selectedHoriz.divisor);
 //      }
+        cmdSetTriggerLevel();
+        cmdSetTriggerSlope();
 
     }
 

@@ -13,6 +13,7 @@ public interface IOsciloscope {
     void disconnect() throws IOException;
 
     void setListener(IDsoGuiListener listener);
+    void setThreshold(int threshold);
     JPanel getPanel();
 
     void setUserProperties(String userSettingPrefix, Properties userSettings);
