@@ -31,6 +31,7 @@ import java.util.logging.SimpleFormatter;
 public class UI extends JFrame implements IDsoGuiListener{
     private static String PROPERTIES_NAME = "osiloscope.settings";
     private static String PROP_DEVICE_NAME = "device";
+    private static String PROP_TR_LEVEL = "trLevel";
 
     private static final Logger logger = Logger.getLogger(UI.class.getName());
 
@@ -64,7 +65,9 @@ public class UI extends JFrame implements IDsoGuiListener{
         });
 
 //        graphPane = new GraphPane(parameters.get(Parameter.THRESHOLD), parameters.get(Parameter.WAIT_DURATION));
-        graphPane = new GraphPane(this,1, 100);
+        String tr = userSettings.getProperty(PROP_TR_LEVEL,"120");
+        int tt = Integer.parseInt(tr);
+        graphPane = new GraphPane(this,tt, 100);
 
         graphPane.setYCoordinateSystem(yAxisBuilder.build());
         graphPane.setXCoordinateSystem(xAxisBuilder.build());
@@ -135,6 +138,7 @@ public class UI extends JFrame implements IDsoGuiListener{
 
     @Override
     public void setThreshold(int threshold) {
+        userSettings.setProperty(PROP_TR_LEVEL,Integer.toString(threshold));
         if(girino != null){
             girino.setThreshold(threshold);
         }

@@ -185,7 +185,16 @@ public class GuiPanel implements IOsciloscope {
         startFired = false;
         startButton.setText(BUTTON_START);
         if( res.isOk() ){
-            this.dsoGuiListener.setData(res.getAquisitionFrame());
+            AquisitionFrame frame = res.getAquisitionFrame();
+            this.dsoGuiListener.setData(frame);
+            if( logger.isDebugEnabled()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Frame thrLevel:").append(arduinoScopeLogic.getTriggerLevel()).append('\n');
+                for( int i=0; i<20;i++){
+                    sb.append(((int)frame.data[i])&0xff).append(' ');
+                }
+                logger.debug(sb.toString());
+            }
         }
     }
 

@@ -141,6 +141,9 @@ public class ArduinoScopeLogic {
         }
         this.triggerLevel = level;
     }
+    public int getTriggerLevel(){
+        return triggerLevel;
+    }
 
 
     void updateParams() throws IOException {
