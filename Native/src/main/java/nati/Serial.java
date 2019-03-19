@@ -1,7 +1,9 @@
 package nati;
 
-import gnu.io.CommPortIdentifier;
-import gnu.io.SerialPort;
+
+import jssc.SerialPort;
+import jssc.SerialPortException;
+import jssc.SerialPortList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +11,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -60,61 +63,38 @@ public class Serial implements Closeable {
 
     protected SerialPort serialPort;
 
-    /** The output stream to the port. */
-    protected InputStream input;
 
-    /**
-     * A BufferedReader which will be fed by a InputStreamReader converting the
-     * bytes into characters making the displayed results codepage independent.
-     */
-    protected OutputStream output;
-
-    public Serial(){
-
-    }
-
-    public Serial(CommPortIdentifier portId) throws Exception {
+    public Serial(String portId) throws Exception {
         connect(portId);
     }
 
-    public void connect(CommPortIdentifier portId) throws Exception {
-        logger.info("connecting {}", portId.getName());
-        serialPort = (SerialPort) portId.open(getClass().getName(), TIME_OUT);
+    public void connect(String portId) throws Exception {
+        logger.info("connecting {}", portId);
+        serialPort = new SerialPort(portId);
 
-        serialPort.setSerialPortParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-
-        output = serialPort.getOutputStream();
-        input = serialPort.getInputStream();
-
-        serialPort.notifyOnDataAvailable(false);
+//        serialPort.setSerialPortParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+//
+//        output = serialPort.getOutputStream();
+//        input = serialPort.getInputStream();
+//
+//        serialPort.notifyOnDataAvailable(false);
     }
 
-    public static List<CommPortIdentifier> enumeratePorts() {
-        List<CommPortIdentifier> ports = new LinkedList<CommPortIdentifier>();
+    public static List<String> enumeratePorts() {
+        String names[] = SerialPortList.getPortNames();
 
-        Enumeration<?> portEnum = CommPortIdentifier.getPortIdentifiers();
-        while (portEnum.hasMoreElements()) {
-            CommPortIdentifier portIdentifier = (CommPortIdentifier) portEnum.nextElement();
-            for (Pattern acceptablePortName : ACCEPTABLE_PORT_NAMES) {
-                String portName = portIdentifier.getName();
-                if (acceptablePortName.matcher(portName).matches()) {
-                    ports.add(portIdentifier);
-                }
-            }
-        }
-
-        return ports;
+        return Arrays.asList(names);
     }
 
-    public String readLine() throws IOException {
-        if (input == null) {
+    public String readLine() throws IOException, SerialPortException {
+        if (serialPort == null) {
             return "";
         }
         StringBuilder line = new StringBuilder();
         int length = 0;
         try {
             while (true) {
-                int c = input.read();
+                int c = serialPort.readBytes(1)[0];
                 logger.debug("read int:{}", c);
                 if (c >= 0) {
                     logger.debug("read byte:{}", (char) c);
@@ -154,39 +134,39 @@ public class Serial implements Closeable {
 
     public int readBytes(byte[] buffer, BooleanSupplier cancel) throws IOException {
         int offset = 0;
-        try {
-            while (offset < buffer.length) {
-                if (input.available() > 0 || offset > 0) {
-                    int size = input.read(buffer, offset, buffer.length - offset);
-                    if (size < 0) {
-                        break;
-                    }
-                    offset += size;
-                } else {
-                    /*
-                     * Sleeping here allows us to be interrupted (the serial
-                     * input is not interruptible itself).
-                     */
-                    Thread.sleep(READ_DELAY);
-                }
-            }
-        } catch (InterruptedException e) {
-            logger.debug("Read aborted");
-            return -1;
-        }
+//        try {
+//            while (offset < buffer.length) {
+//                if (input.available() > 0 || offset > 0) {
+//                    int size = input.read(buffer, offset, buffer.length - offset);
+//                    if (size < 0) {
+//                        break;
+//                    }
+//                    offset += size;
+//                } else {
+//                    /*
+//                     * Sleeping here allows us to be interrupted (the serial
+//                     * input is not interruptible itself).
+//                     */
+//                    Thread.sleep(READ_DELAY);
+//                }
+//            }
+//        } catch (InterruptedException e) {
+//            logger.debug("Read aborted");
+//            return -1;
+//        }
         logger.debug("< {} byte(s)", offset);
         return offset;
     }
 
     public void writeLine(String line) throws IOException {
-        if (output == null) {
-            return;
-        }
-        for (int i = 0; i < line.length(); ++i) {
-            output.write(line.charAt(i));
-        }
-        output.write('\n');
-        output.flush();
+//        if (output == null) {
+//            return;
+//        }
+//        for (int i = 0; i < line.length(); ++i) {
+//            output.write(line.charAt(i));
+//        }
+//        output.write('\n');
+//        output.flush();
         logger.debug("> ({})", line);
     }
 
@@ -194,17 +174,10 @@ public class Serial implements Closeable {
     public void close() {
         if (serialPort != null) {
             try {
-                output.flush();
-                output.close();
-            } catch (IOException e) {
-                logger.error("When flushing output before closing serial.", e);
+                serialPort.closePort();
+            } catch (SerialPortException e) {
+                e.printStackTrace();
             }
-            try {
-                input.close();
-            } catch (IOException e) {
-                logger.error("When flushing output before closing serial.", e);
-            }
-            serialPort.close();
             serialPort = null;
         }
     }

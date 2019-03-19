@@ -1,7 +1,6 @@
 package org.hihan.girinoscope.ui;
 
 import dso.*;
-import gnu.io.CommPortIdentifier;
 import nati.Serial;
 import org.hihan.girinoscope.Native;
 import org.hihan.girinoscope.ui.images.Icon;
@@ -88,16 +87,9 @@ public class UI extends JFrame implements IDsoGuiListener{
         stopAcquiringAction.setEnabled(false);
         exportLastFrameAction.setEnabled(false);
 
-        if (portId != null) {
-            startAcquiringAction.setEnabled(true);
-        } else {
-            startAcquiringAction.setEnabled(false);
-            setStatus("red", "No USB to serial adaptation port detected.");
-        }
         startAcquiringAction.setEnabled(true);
     }
 
-    private CommPortIdentifier portId;
 
    // private Map<Parameter, Integer> parameters = Girino.getDefaultParameters(new HashMap<Parameter, Integer>());
 
@@ -403,22 +395,6 @@ public class UI extends JFrame implements IDsoGuiListener{
 
     private JMenu createSerialMenu() {
         JMenu menu = new JMenu("Serial port");
-        ButtonGroup group = new ButtonGroup();
-        for (final CommPortIdentifier portId : Serial.enumeratePorts()) {
-            Action setSerialPort = new AbstractAction(portId.getName()) {
-
-                @Override
-                public void actionPerformed(ActionEvent event) {
-                    UI.this.portId = portId;
-                }
-            };
-            AbstractButton button = new JCheckBoxMenuItem(setSerialPort);
-            if (UI.this.portId == null) {
-                button.doClick();
-            }
-            group.add(button);
-            menu.add(button);
-        }
         return menu;
     }
 
@@ -560,7 +536,6 @@ public class UI extends JFrame implements IDsoGuiListener{
 
     private class DataAcquisitionTask extends SwingWorker<Void, AquisitionFrame> {
 
-        private CommPortIdentifier frozenPortId;
 
         //      private Map<Parameter, Integer> frozenParameters = new HashMap<Parameter, Integer>();
 
@@ -581,7 +556,7 @@ public class UI extends JFrame implements IDsoGuiListener{
 
         private void updateConnection() throws Exception {
             synchronized (UI.this) {
-                frozenPortId = portId;
+
 //                frozenParameters.putAll(parameters);
             }
 
@@ -598,7 +573,7 @@ public class UI extends JFrame implements IDsoGuiListener{
             try {
                 connection.get(5, TimeUnit.SECONDS);
             } catch (TimeoutException e) {
-                throw new TimeoutException("No Girino detected on " + frozenPortId.getName());
+
             } catch (InterruptedException e) {
                 connection.cancel(true);
                 throw e;
@@ -669,7 +644,7 @@ public class UI extends JFrame implements IDsoGuiListener{
                 if (!isCancelled()) {
                     get();
                 }
-                setStatus("blue", "Done acquiring data from %s.", frozenPortId.getName());
+
             } catch (ExecutionException e) {
                 setStatus("red", e.getCause().getMessage());
             } catch (Exception e) {

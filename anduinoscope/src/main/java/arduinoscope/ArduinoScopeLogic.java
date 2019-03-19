@@ -3,7 +3,7 @@ package arduinoscope;
 import dso.AquisitionFrame;
 import dso.SlopeEdge;
 import dso.XAxisSensivity;
-import gnu.io.CommPortIdentifier;
+import jssc.SerialPortException;
 import nati.Serial;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ public class ArduinoScopeLogic {
     private static final String CMD_SET_TRIGGER_TYPE = "#stt";
     private static final String CMD_SET_TRIGGER_VALUE = "#stv";
     private static final String CMD_SET_TRIGGER_SLOPE = "#sts";
-    private Serial serialPort = new Serial();
+    private Serial serialPort;// = new Serial();
 
     public ArduinoScopeLogic() {
 
@@ -49,13 +49,13 @@ public class ArduinoScopeLogic {
     }
 
     public static EnumeratedPort[] getEnumeratedPorts() {
-        List<CommPortIdentifier> ports = Serial.enumeratePorts();
+        List<String> ports = Serial.enumeratePorts();
 
         EnumeratedPort result[] = new EnumeratedPort[ports.size() + 1];
 
         result[0] = new EnumeratedPort();
         int i = 1;
-        for (CommPortIdentifier id : ports) {
+        for (String id : ports) {
             result[i++] = new EnumeratedPort(id);
         }
         return result;
@@ -65,8 +65,8 @@ public class ArduinoScopeLogic {
         try {
             disconnect();
             if (enumeratedPort.getPort() != null) {
-                serialPort = new Serial();
-                serialPort.connect(enumeratedPort.getPort());
+                serialPort = new Serial(enumeratedPort.getPort());
+//                serialPort.connect();
                 return initDevice();
             }
             logger.info("connected");
@@ -106,21 +106,21 @@ public class ArduinoScopeLogic {
         return result;
     }
 
-    private void cmdSetSpeed(int divisor) throws IOException {
+    private void cmdSetSpeed(int divisor) throws IOException, SerialPortException {
         serialPort.writeLine(CMD_SET_SPEED + " " + divisor);
         String res = serialPort.readLine();
         lastSettedSpeed = divisor;
         logger.warn("cmdSetSpeed:" + res);
     }
 
-    private void cmdSetTriggerLevel() throws IOException {
+    private void cmdSetTriggerLevel() throws IOException, SerialPortException {
         serialPort.writeLine(CMD_SET_TRIGGER_VALUE + " " + this.triggerLevel);
         String res = serialPort.readLine();
         logger.warn("cmdSetTriggerLevel:" + res);
 
     }
 
-    private void cmdSetTriggerSlope() throws IOException {
+    private void cmdSetTriggerSlope() throws IOException, SerialPortException {
         serialPort.writeLine(CMD_SET_TRIGGER_SLOPE + " " + this.slopeEdge.getCommand());
         String res = serialPort.readLine();
         logger.warn("cmdSetTriggerSlope:" + res);
@@ -146,7 +146,7 @@ public class ArduinoScopeLogic {
     }
 
 
-    void updateParams() throws IOException {
+    void updateParams() throws IOException, SerialPortException {
 //      if (lastSettedSpeed != selectedHoriz.divisor) {
             cmdSetSpeed(selectedHoriz.divisor);
 //      }
@@ -182,23 +182,23 @@ public class ArduinoScopeLogic {
 
 
     public static class EnumeratedPort {
-        private CommPortIdentifier portIdentifier;
+        private String portIdentifier;
 
-        public EnumeratedPort(CommPortIdentifier portIdentifier) {
+        public EnumeratedPort(String portIdentifier) {
             this.portIdentifier = portIdentifier;
         }
 
         public EnumeratedPort() {
         }
 
-        CommPortIdentifier getPort() {
+        String getPort() {
             return portIdentifier;
         }
 
         @Override
         public String toString() {
             if (portIdentifier != null) {
-                return portIdentifier.getName();
+                return portIdentifier;
             }
             return "<no port selected>";
         }
