@@ -71,7 +71,7 @@ public class Serial implements Closeable {
         logger.info("connecting {}", portId);
         serialPort = new SerialPort(portId);
         serialPort.openPort();
-        serialPort.setParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+        serialPort.setParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE,false,false);
 //        serialPort.setDTR(true);
 //        serialPort.setRTS(true);
 //        serialPort.setFlowControlMode(FLOWCONTROL_NONE);
@@ -143,8 +143,11 @@ public class Serial implements Closeable {
         return offset;
     }
 
-    public void writeLine(String line) throws IOException, SerialPortException {
+    public void writeLine(String line) throws IOException, SerialPortException, InterruptedException {
         serialPort.writeString(line+"\n");
+        while(serialPort.getOutputBufferBytesCount()>0){
+            Thread.sleep(0b1);
+        }
 
 //        if (output == null) {
 //            return;

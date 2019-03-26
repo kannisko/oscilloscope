@@ -98,28 +98,28 @@ public class ArduinoScopeLogic {
     }
 
 
-    public byte[] getData(BooleanSupplier cancel) throws IOException, SerialPortException {
+    public byte[] getData(BooleanSupplier cancel) throws IOException, SerialPortException, InterruptedException {
         serialPort.writeLine(CMD_ACTION_ACQUIRE_DATA);
         byte result[] = new byte[DATA_BUFFER_SIZE];
         serialPort.readBytes(result, cancel);
         return result;
     }
 
-    private void cmdSetSpeed(int divisor) throws IOException, SerialPortException {
+    private void cmdSetSpeed(int divisor) throws IOException, SerialPortException, InterruptedException {
         serialPort.writeLine(CMD_SET_SPEED + " " + divisor);
         String res = serialPort.readLine();
         lastSettedSpeed = divisor;
         logger.warn("cmdSetSpeed:" + res);
     }
 
-    private void cmdSetTriggerLevel() throws IOException, SerialPortException {
+    private void cmdSetTriggerLevel() throws IOException, SerialPortException, InterruptedException {
         serialPort.writeLine(CMD_SET_TRIGGER_VALUE + " " + this.triggerLevel);
         String res = serialPort.readLine();
         logger.warn("cmdSetTriggerLevel:" + res);
 
     }
 
-    private void cmdSetTriggerSlope() throws IOException, SerialPortException {
+    private void cmdSetTriggerSlope() throws IOException, SerialPortException, InterruptedException {
         serialPort.writeLine(CMD_SET_TRIGGER_SLOPE + " " + this.slopeEdge.getCommand());
         String res = serialPort.readLine();
         logger.warn("cmdSetTriggerSlope:" + res);
@@ -145,7 +145,7 @@ public class ArduinoScopeLogic {
     }
 
 
-    void updateParams() throws IOException, SerialPortException {
+    void updateParams() throws IOException, SerialPortException, InterruptedException {
 //      if (lastSettedSpeed != selectedHoriz.divisor) {
             cmdSetSpeed(selectedHoriz.divisor);
 //      }
@@ -241,7 +241,7 @@ public class ArduinoScopeLogic {
         if (ports.length <= 1) {
             return;
         }
-        EnumeratedPort port = ports[1];
+        EnumeratedPort port = ports[2];
         ArduinoScopeLogic arduinoScopeLogic = new ArduinoScopeLogic();
         arduinoScopeLogic.connect(port);
     }
