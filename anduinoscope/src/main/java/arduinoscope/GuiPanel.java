@@ -92,7 +92,7 @@ public class GuiPanel implements IOsciloscope {
                 dsoGuiListener.getExecutorService().submit(connect);
                 boolean isOk = false;
                 try {
-                    isOk = connect.get(1500, TimeUnit.MILLISECONDS);
+                    isOk = connect.get(4500, TimeUnit.MILLISECONDS);
                 } catch (ExecutionException | InterruptedException | TimeoutException e) {
                     logger.error(e.toString());
                     connect.cancel(true);

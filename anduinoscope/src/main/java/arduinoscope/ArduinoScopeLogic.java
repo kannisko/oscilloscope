@@ -66,7 +66,6 @@ public class ArduinoScopeLogic {
             disconnect();
             if (enumeratedPort.getPort() != null) {
                 serialPort = new Serial(enumeratedPort.getPort());
-//                serialPort.connect();
                 return initDevice();
             }
             logger.info("connected");
@@ -83,8 +82,8 @@ public class ArduinoScopeLogic {
         logger.info("initializing device");
         try {
             for (int i = 0; i < RETRY_CNT; i++) {
-                serialPort.writeLine(CMD_ACTION_RESET);
-                Thread.sleep(100);
+//                serialPort.writeLine(CMD_ACTION_RESET);
+//                Thread.sleep(100);
                 serialPort.writeLine(CMD_GET_VERSION);
                 String response = serialPort.readLine();
                 if (response.startsWith(ARDUSCOPE_VERSION)) {
@@ -99,7 +98,7 @@ public class ArduinoScopeLogic {
     }
 
 
-    public byte[] getData(BooleanSupplier cancel) throws IOException {
+    public byte[] getData(BooleanSupplier cancel) throws IOException, SerialPortException {
         serialPort.writeLine(CMD_ACTION_ACQUIRE_DATA);
         byte result[] = new byte[DATA_BUFFER_SIZE];
         serialPort.readBytes(result, cancel);
@@ -158,7 +157,10 @@ public class ArduinoScopeLogic {
 
     public void disconnect() throws IOException {
         logger.debug("disconnecting");
-        serialPort.close();
+        if( serialPort != null){
+            serialPort.close();
+            serialPort = null;
+        }
     }
 
 
@@ -241,11 +243,6 @@ public class ArduinoScopeLogic {
         }
         EnumeratedPort port = ports[1];
         ArduinoScopeLogic arduinoScopeLogic = new ArduinoScopeLogic();
-        arduinoScopeLogic.connect(port);
-        arduinoScopeLogic.connect(port);
-        arduinoScopeLogic.connect(port);
-        arduinoScopeLogic.connect(port);
-        arduinoScopeLogic.connect(port);
         arduinoScopeLogic.connect(port);
     }
 

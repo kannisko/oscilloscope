@@ -17,6 +17,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.regex.Pattern;
+
+import static jssc.SerialPort.FLOWCONTROL_NONE;
+
 /**
  * Reading operations are semi-interruptible here. As long as nothing as been
  * read, it can be interrupted, but once something has been read, it continues
@@ -33,10 +36,6 @@ import java.util.regex.Pattern;
 public class Serial implements Closeable {
 
     protected static final Logger logger = LoggerFactory.getLogger(Serial.class.getName());
-
-    static {
-        Native.setLibraryPath();
-    }
 
     /**
      * The port we're normally going to use. Port detection could be forced by
@@ -71,8 +70,11 @@ public class Serial implements Closeable {
     public void connect(String portId) throws Exception {
         logger.info("connecting {}", portId);
         serialPort = new SerialPort(portId);
-
-//        serialPort.setSerialPortParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+        serialPort.openPort();
+        serialPort.setParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+//        serialPort.setDTR(true);
+//        serialPort.setRTS(true);
+//        serialPort.setFlowControlMode(FLOWCONTROL_NONE);
 //
 //        output = serialPort.getOutputStream();
 //        input = serialPort.getInputStream();
@@ -94,41 +96,24 @@ public class Serial implements Closeable {
         int length = 0;
         try {
             while (true) {
-                int c = serialPort.readBytes(1)[0];
-                logger.debug("read int:{}", c);
-                if (c >= 0) {
+                if(serialPort.getInputBufferBytesCount() > 0 ) {
+                    int c = serialPort.readBytes(1)[0];
                     logger.debug("read byte:{}", (char) c);
-                    if (c == '\n') {
-                        break;
+                    if (c >= 0) {
+                        if (c == '\n') {
+                            break;
+                        }
+                        line.append((char) c);
                     }
-
-                    line.append((char) c);
-
                 } else {
-                    Thread.sleep(200);
+                    Thread.sleep(10);
                 }
-
-//                if ((input.available() > 0 || line.length() > 0) && (c = input.read()) >= 0) {
-//                    line.append((char) c);
-//                    ++length;
-//                    boolean eol = length >= 2  && line.charAt(length - 1) == '\n';
-//                    if (eol) {
-//                        line.setLength(length - 1);
-//                        break;
-//                    }
-//                } else {
-//                    /*
-//                     * Sleeping here allows us to be interrupted (the serial
-//                     * input is not interruptible itself).
-//                     */
-//                    Thread.sleep(READ_DELAY);
-//                }
             }
         } catch (InterruptedException e) {
             logger.debug("Read aborted");
             return "";
         }
-        logger.debug("< ({})", line);
+        logger.error("< ({})", line);
         return line.toString();
     }
 
@@ -158,7 +143,9 @@ public class Serial implements Closeable {
         return offset;
     }
 
-    public void writeLine(String line) throws IOException {
+    public void writeLine(String line) throws IOException, SerialPortException {
+        serialPort.writeString(line+"\n");
+
 //        if (output == null) {
 //            return;
 //        }
