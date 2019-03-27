@@ -82,8 +82,8 @@ public class ArduinoScopeLogic {
         logger.info("initializing device");
         try {
             for (int i = 0; i < RETRY_CNT; i++) {
-//                serialPort.writeLine(CMD_ACTION_RESET);
-//                Thread.sleep(100);
+                serialPort.writeLine(CMD_ACTION_RESET);
+                Thread.sleep(100);
                 serialPort.writeLine(CMD_GET_VERSION);
                 String response = serialPort.readLine();
                 if (response.startsWith(ARDUSCOPE_VERSION)) {
@@ -99,6 +99,9 @@ public class ArduinoScopeLogic {
 
 
     public byte[] getData(BooleanSupplier cancel) throws IOException, SerialPortException, InterruptedException {
+        if(serialPort == null){
+            return new byte[0];
+        }
         serialPort.writeLine(CMD_ACTION_ACQUIRE_DATA);
         byte result[] = new byte[DATA_BUFFER_SIZE];
         serialPort.readBytes(result, cancel);
@@ -106,6 +109,9 @@ public class ArduinoScopeLogic {
     }
 
     private void cmdSetSpeed(int divisor) throws IOException, SerialPortException, InterruptedException {
+        if( serialPort == null ){
+            return;
+        }
         serialPort.writeLine(CMD_SET_SPEED + " " + divisor);
         String res = serialPort.readLine();
         lastSettedSpeed = divisor;
@@ -113,6 +119,9 @@ public class ArduinoScopeLogic {
     }
 
     private void cmdSetTriggerLevel() throws IOException, SerialPortException, InterruptedException {
+        if( serialPort == null ){
+            return;
+        }
         serialPort.writeLine(CMD_SET_TRIGGER_VALUE + " " + this.triggerLevel);
         String res = serialPort.readLine();
         logger.warn("cmdSetTriggerLevel:" + res);
@@ -120,6 +129,9 @@ public class ArduinoScopeLogic {
     }
 
     private void cmdSetTriggerSlope() throws IOException, SerialPortException, InterruptedException {
+        if( serialPort == null ){
+            return;
+        }
         serialPort.writeLine(CMD_SET_TRIGGER_SLOPE + " " + this.slopeEdge.getCommand());
         String res = serialPort.readLine();
         logger.warn("cmdSetTriggerSlope:" + res);

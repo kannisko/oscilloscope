@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.*;
 
+import static java.lang.Integer.min;
+
 public class GuiPanel implements IOsciloscope {
     protected static final Logger logger = LoggerFactory.getLogger(GuiPanel.class.getName());
     private JPanel panel;
@@ -190,7 +192,7 @@ public class GuiPanel implements IOsciloscope {
             if( logger.isDebugEnabled()) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("Frame thrLevel:").append(arduinoScopeLogic.getTriggerLevel()).append('\n');
-                for( int i=0; i<20;i++){
+                for( int i=0; i<min(20,frame.data.length);i++){
                     sb.append(((int)frame.data[i])&0xff).append(' ');
                 }
                 logger.debug(sb.toString());

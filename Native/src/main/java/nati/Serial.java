@@ -72,19 +72,10 @@ public class Serial implements Closeable {
         serialPort = new SerialPort(portId);
         serialPort.openPort();
         serialPort.setParams(DATA_RATE, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE,false,false);
-//        serialPort.setDTR(true);
-//        serialPort.setRTS(true);
-//        serialPort.setFlowControlMode(FLOWCONTROL_NONE);
-//
-//        output = serialPort.getOutputStream();
-//        input = serialPort.getInputStream();
-//
-//        serialPort.notifyOnDataAvailable(false);
     }
 
     public static List<String> enumeratePorts() {
         String names[] = SerialPortList.getPortNames();
-
         return Arrays.asList(names);
     }
 
@@ -98,7 +89,6 @@ public class Serial implements Closeable {
             while (true) {
                 if(serialPort.getInputBufferBytesCount() > 0 ) {
                     int c = serialPort.readBytes(1)[0];
-                    logger.debug("read byte:{}", (char) c);
                     if (c >= 0) {
                         if (c == '\n') {
                             break;
@@ -117,37 +107,41 @@ public class Serial implements Closeable {
         return line.toString();
     }
 
-    public int readBytes(byte[] buffer, BooleanSupplier cancel) throws IOException {
+    public int readBytes(byte[] buffer, BooleanSupplier cancel) throws IOException, SerialPortException {
+
         int offset = 0;
-//        try {
-//            while (offset < buffer.length) {
-//                if (input.available() > 0 || offset > 0) {
-//                    int size = input.read(buffer, offset, buffer.length - offset);
-//                    if (size < 0) {
-//                        break;
-//                    }
-//                    offset += size;
-//                } else {
-//                    /*
-//                     * Sleeping here allows us to be interrupted (the serial
-//                     * input is not interruptible itself).
-//                     */
-//                    Thread.sleep(READ_DELAY);
-//                }
-//            }
-//        } catch (InterruptedException e) {
-//            logger.debug("Read aborted");
-//            return -1;
-//        }
+        try {
+            while (offset < buffer.length) {
+                if (serialPort.getInputBufferBytesCount() > 0 ) {
+                    byte data[] = serialPort.readBytes();
+                    int size = Integer.min(data.length,buffer.length - offset);
+                    int i = 0;
+                    while( size >0 ){
+                        size--;
+                        buffer[offset++] = data[i++];
+                    }
+
+                } else {
+                    /*
+                     * Sleeping here allows us to be interrupted (the serial
+                     * input is not interruptible itself).
+                     */
+                    Thread.sleep(READ_DELAY);
+                }
+            }
+        } catch (InterruptedException e) {
+            logger.debug("Read aborted");
+            return -1;
+        }
         logger.debug("< {} byte(s)", offset);
         return offset;
     }
 
     public void writeLine(String line) throws IOException, SerialPortException, InterruptedException {
         serialPort.writeString(line+"\n");
-        while(serialPort.getOutputBufferBytesCount()>0){
-            Thread.sleep(0b1);
-        }
+//        while(serialPort.getOutputBufferBytesCount()>0){
+  //          Thread.sleep(0b1);
+    //    }
 
 //        if (output == null) {
 //            return;
